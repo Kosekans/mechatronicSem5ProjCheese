@@ -1,4 +1,5 @@
 //macro prevents the interrupt from changing part of the posi variable while it is being read. Without the ATOMIC_BLOCK macro, it is possible for the interrupt to change part of the posi while it is being read, leading to a completely different reading of the variable.
+#include <Arduino.h>
 #include <util/atomic.h>
 
 // Define the pins for the left motor
