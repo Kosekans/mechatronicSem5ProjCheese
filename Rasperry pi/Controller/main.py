@@ -2,17 +2,7 @@ import array
 
 
 def main():
-    print(calculateCoords(35, 30, 40))
     return
-
-
-def calculateCoords(distance: float, left: float, right: float):
-    angle: float = (left * distance) / (left * left + right * right)
-    x: float = left * angle
-    y: float = right * angle
-    coords = array.array('f', [x, y])
-    return coords
-
 
 def boxCoords(x: float, y: float, leftBorder: float, rightBorder: float, lowerBorder: float, upperBorder: float):
     if x < leftBorder:

@@ -27,6 +27,9 @@ volatile int posVR = 0;
 
 const long MAX_SPEED = 255; // Maximum speed for the motors
 const long MAX_JVAL = 1023; // 1023 max value for joysticks. min value is 0
+const int BOARD_WIDTH = 533;
+const int BOARD_HIGHT = 770;
+const int COORD_SCAL = 1; // coord = encodersteps / SCAL
 
 // if boarder is near
 bool blockLeftPos = false;
@@ -77,6 +80,8 @@ void loop()
     posL = posVL;
     posR = posVR;
   }
+
+  corectCoords(calculateCoords(BOARD_WIDTH, posL, posR), COORD_SCAL, (BOARD_WIDTH / 2), BOARD_HIGHT);
   blockCheck(posL, posR);
 
   // joystickvalues
@@ -123,15 +128,23 @@ void findCoordOrigin()
   posVR = 0;
 }
 
-float *calculateCoords(float distance, float left, float right)
+float* calculateCoords(int distance, int left, int right)
 {
-  float xCor = 0; // todo
-  float yCor = 0;  // todo
   float angle = (float)(left * distance) / (float)(left * left + right * right);
-  float x = (left * angle) - xCor;
-  float y = (right * angle) - yCor;
+  float x = left * angle;
+  float y = right * angle;
   float *coords = new float[2]{x, y};
   return coords;
+}
+
+int* corectCoords(float coords[2], int scal, int xCor, int yCor)
+{
+  int *corectedCoords = new int[2];
+  corectedCoords[0] = coords[0] / scal;
+  corectedCoords[1] = coords[0] / scal;
+  corectedCoords[0] = coords[0] - xCor;
+  corectedCoords[1] = coords[0] - yCor;
+  return corectedCoords;
 }
 
 void moveRocket(int leftSpeed, int rightSpeed)
