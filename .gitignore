@@ -1,4 +1,7 @@
 Arduinos/chaesAntrieb/.vscode*
+Arduinos/chaesAntrieb/.pio*
+Arduinos/chaesZielsystem/.vscode*
+Arduinos/chaesZielsystem/.pio*
 .idea*
 .vscode*
 # Byte-compiled / optimized / DLL files
