@@ -1,19 +1,22 @@
 #include <Arduino.h>
-// macro prevents the interrupt from changing part of the posi variable while it is being read. Without the ATOMIC_BLOCK macro, it is possible for the interrupt to change part of the posi while it is being read, leading to a completely different reading of the variable.
+// macro prevents the interrupt from changing part of the posi variable while it
+// is being read. Without the ATOMIC_BLOCK macro, it is possible for the
+// interrupt to change part of the posi while it is being read, leading to a
+// completely different reading of the variable.
 #include <util/atomic.h>
 
 // Define the pins for the left motor
-#define ENL 9 // pmw pin
+#define ENL 9  // pmw pin
 #define IN1 8
 #define IN2 7
-#define C1L 18 // interupt
-#define C2L 19 // interupt
+#define C1L 18  // interupt
+#define C2L 19  // interupt
 // Define the pins for the right motor
-#define ENR 4 // pmw pin
+#define ENR 4  // pmw pin
 #define IN3 6
 #define IN4 5
-#define C1R 20 // interupt
-#define C2R 21 // interupt
+#define C1R 20  // interupt
+#define C2R 21  // interupt
 // define the pins for the joysticks
 #define JL A0
 #define JR A1
@@ -21,15 +24,18 @@
 #define LSL 2
 #define LSR 3
 
-// volatile keyword prevents the compiler from performing optimizations on the variable that could potentially lead to it being misread. In addition to the volatile directive, an ATOMIC_BLOCK macro is needed to access the position variable.
+// volatile keyword prevents the compiler from performing optimizations on the
+// variable that could potentially lead to it being misread. In addition to the
+// volatile directive, an ATOMIC_BLOCK macro is needed to access the position
+// variable.
 volatile int posVL = 0;
 volatile int posVR = 0;
 
-const long MAX_SPEED = 255; // Maximum speed for the motors
-const long MAX_JVAL = 1023; // 1023 max value for joysticks. min value is 0
+const long MAX_SPEED = 255;  // Maximum speed for the motors
+const long MAX_JVAL = 1023;  // 1023 max value for joysticks. min value is 0
 const int BOARD_WIDTH = 533;
 const int BOARD_HIGHT = 770;
-const int COORD_SCAL = 1; // coord = encodersteps / SCAL
+const int COORD_SCAL = 1;  // coord = encodersteps / SCAL
 
 // if boarder is near
 bool blockLeftPos = false;
@@ -41,8 +47,7 @@ bool blockRightNeg = false;
 bool dirL;
 bool dirR;
 
-void setup()
-{
+void setup() {
   // dc motor entcoder
   pinMode(C1L, INPUT);
   pinMode(C2L, INPUT);
@@ -67,23 +72,23 @@ void setup()
 
   // null the coords at begining
   findCoordOrigin();
+  Serial.begin(9600);
 }
 
-void loop()
-{
-  // Read the position of the motors in an atomic block to avoid a potential misread if the interrupt coincides with this code running
-  // see: https://www.arduino.cc/reference/en/language/variables/variable-scope-qualifiers/volatile/
+void loop() {
+  // Read the position of the motors in an atomic block to avoid a potential
+  // misread if the interrupt coincides with this code running see:
+  // https://www.arduino.cc/reference/en/language/variables/variable-scope-qualifiers/volatile/
   int posL = 0;
   int posR = 0;
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
-  {
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     posL = posVL;
     posR = posVR;
   }
-
-  corectCoords(calculateCoords(BOARD_WIDTH, posL, posR), COORD_SCAL, (BOARD_WIDTH / 2), BOARD_HIGHT);
-  blockCheck(posL, posR);
-
+// coordinates
+ int* coords = corectCoords(calculateCoords(BOARD_WIDTH, posL, posR), COORD_SCAL, (BOARD_WIDTH / 2), BOARD_HIGHT);
+ blockCheck(coords);
+ Serial.println();
   // joystickvalues
   int jValL = analogRead(JL);
   int jValR = analogRead(JR);
@@ -95,51 +100,45 @@ void loop()
   executeGameMode(jValL, jValR, gameMode);
 }
 
-void executeGameMode(int jValL, int jValR, int gameMode)
-{
-  switch (gameMode)
-  {
-  case 0:
-    // move the motors in the direction of the joystick and different speed, depending on joysticktilt
-    moveRocket((int)round(mapFloat(jValL, 0, MAX_JVAL, -MAX_SPEED, MAX_SPEED)), (int)round(mapFloat(jValR, 0, MAX_JVAL, -MAX_SPEED, MAX_SPEED)));
-    break;
+void executeGameMode(int jValL, int jValR, int gameMode) {
+  switch (gameMode) {
+    case 0:
+      // move the motors in the direction of the joystick and different speed,
+      // depending on joysticktilt
+      moveRocket(
+          (int)round(mapFloat(jValL, 0, MAX_JVAL, -MAX_SPEED, MAX_SPEED)),
+          (int)round(mapFloat(jValR, 0, MAX_JVAL, -MAX_SPEED, MAX_SPEED)));
+      break;
   }
 }
 
-int getGameMode()
-{
+int getGameMode() {
   // todoooooo
   return 0;
 }
 
-void blockCheck(int posL, int posR)
-{
-  // todo
-  blockLeftPos = blockRightPos = true;
+void blockCheck(int coords[2]) {
+  blockLeftPos = blockRightPos = (coords[0]+coords[0]) > BOARD_WIDTH;
 }
 
-void findCoordOrigin()
-{
-  while (!blockLeftNeg && !blockRightNeg)
-  {
+void findCoordOrigin() {
+  while (!blockLeftNeg && !blockRightNeg) {
     moveRocket(-MAX_SPEED, -MAX_SPEED);
   }
   posVL = 0;
   posVR = 0;
 }
 
-float* calculateCoords(int distance, int left, int right)
-{
+float* calculateCoords(int distance, int left, int right) {
   float angle = (float)(left * distance) / (float)(left * left + right * right);
   float x = left * angle;
   float y = right * angle;
-  float *coords = new float[2]{x, y};
+  float* coords = new float[2]{x, y};
   return coords;
 }
 
-int* corectCoords(float coords[2], int scal, int xCor, int yCor)
-{
-  int *corectedCoords = new int[2];
+int* corectCoords(float coords[2], int scal, int xCor, int yCor) {
+  int* corectedCoords = new int[2];
   corectedCoords[0] = coords[0] / scal;
   corectedCoords[1] = coords[0] / scal;
   corectedCoords[0] = coords[0] - xCor;
@@ -147,43 +146,34 @@ int* corectCoords(float coords[2], int scal, int xCor, int yCor)
   return corectedCoords;
 }
 
-void moveRocket(int leftSpeed, int rightSpeed)
-{
+void moveRocket(int leftSpeed, int rightSpeed) {
   // Control the direction of the left motor
   dirL = leftSpeed > 0;
-  if (leftSpeed == 0)
-  {
+  if (leftSpeed == 0) {
     digitalWrite(IN1, false);
     digitalWrite(IN2, false);
-  }
-  else
-  {
+  } else {
     digitalWrite(IN1, dirL);
     digitalWrite(IN2, !dirL);
   }
 
   // Control the direction of the right motor
   dirR = rightSpeed > 0;
-  if (rightSpeed == 0)
-  {
+  if (rightSpeed == 0) {
     digitalWrite(IN3, false);
     digitalWrite(IN4, false);
-  }
-  else
-  {
+  } else {
     digitalWrite(IN3, dirR);
     digitalWrite(IN4, !dirR);
   }
 
   // catch if rocket is at boarder
-  if ((dirL && blockLeftPos) || (!dirL && blockLeftNeg))
-  {
+  if ((dirL && blockLeftPos) || (!dirL && blockLeftNeg)) {
     digitalWrite(IN1, false);
     digitalWrite(IN2, false);
     analogWrite(ENL, 0);
   }
-  if ((dirR && blockRightPos) || (!dirR && blockRightNeg))
-  {
+  if ((dirR && blockRightPos) || (!dirR && blockRightNeg)) {
     digitalWrite(IN3, false);
     digitalWrite(IN4, false);
     analogWrite(ENR, 0);
@@ -193,45 +183,35 @@ void moveRocket(int leftSpeed, int rightSpeed)
   analogWrite(ENR, abs(rightSpeed));
 }
 
-void readEncoderL()
-{
+void readEncoderL() {
   int x = digitalRead(C2L);
-  if (x > 0)
-  {
+  if (x > 0) {
     posVL++;
-  }
-  else
-  {
+  } else {
     posVL--;
   }
 }
 
-void readEncoderR()
-{
+void readEncoderR() {
   int x = digitalRead(C2R);
-  if (x > 0)
-  {
+  if (x > 0) {
     posVR++;
-  }
-  else
-  {
+  } else {
     posVR--;
   }
 }
 
-void readLSL()
-{
+void readLSL() {
   blockLeftPos = dirL;
   blockLeftNeg = !dirL;
 }
 
-void readLSR()
-{
+void readLSR() {
   blockRightPos = dirR;
   blockRightNeg = !dirR;
 }
 
-float mapFloat(long x, long in_min, long in_max, long out_min, long out_max)
-{
-  return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min;
+float mapFloat(long x, long in_min, long in_max, long out_min, long out_max) {
+  return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) +
+         out_min;
 }
