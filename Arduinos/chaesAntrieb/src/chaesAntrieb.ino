@@ -88,8 +88,10 @@ void loop() {
     posR = posVR;
   }
   // coordinates
-  int* coords = corectCoords(calculateCoords(BOARD_WIDTH, posL, posR),
-                             COORD_SCAL, (BOARD_WIDTH / 2), BOARD_HIGHT);
+  int* coords =
+      boxCoords(corectCoords(calculateCoords(BOARD_WIDTH, posL, posR),
+                             COORD_SCAL, BOARD_WIDTH / 2, BOARD_HIGHT),
+                BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
   Serial.println();
   // joystickvalues
   int jValL = analogRead(JL);
@@ -147,6 +149,23 @@ int* corectCoords(float coords[2], int scal, int xCor, int yCor) {
   corectedCoords[0] = coords[0] - xCor;
   corectedCoords[1] = coords[0] - yCor;
   return corectedCoords;
+}
+
+int* boxCoords(int coords[2], int leftBorder, int rightBorder, int lowerBorder,
+               int upperBorder) {
+  if (coords[0] < leftBorder) {
+    coords[0] = leftBorder;
+  }
+  if (coords[0] > rightBorder) {
+    coords[0] = rightBorder;
+  }
+  if (coords[1] < lowerBorder) {
+    coords[1] = lowerBorder;
+  }
+  if (coords[1] > upperBorder) {
+    coords[1] = upperBorder;
+  }
+  return coords;
 }
 
 void moveRocket(int leftSpeed, int rightSpeed) {
