@@ -67,8 +67,10 @@ void setup() {
   // limit switches
   pinMode(LSL, INPUT);
   pinMode(LSR, INPUT);
-  attachInterrupt(digitalPinToInterrupt(LSL), readLSL, RISING);
-  attachInterrupt(digitalPinToInterrupt(LSR), readLSR, RISING);
+  attachInterrupt(digitalPinToInterrupt(LSL), readRisingLSL, RISING);
+  attachInterrupt(digitalPinToInterrupt(LSR), readRisingLSR, RISING);
+  attachInterrupt(digitalPinToInterrupt(LSL), readFallingLSL, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LSR), readFallingLSR, FALLING);
 
   // null the coords at begining
   findCoordOrigin();
@@ -85,10 +87,10 @@ void loop() {
     posL = posVL;
     posR = posVR;
   }
-// coordinates
- int* coords = corectCoords(calculateCoords(BOARD_WIDTH, posL, posR), COORD_SCAL, (BOARD_WIDTH / 2), BOARD_HIGHT);
- blockCheck(coords);
- Serial.println();
+  // coordinates
+  int* coords = corectCoords(calculateCoords(BOARD_WIDTH, posL, posR),
+                             COORD_SCAL, (BOARD_WIDTH / 2), BOARD_HIGHT);
+  Serial.println();
   // joystickvalues
   int jValL = analogRead(JL);
   int jValR = analogRead(JR);
@@ -96,6 +98,7 @@ void loop() {
   // rasperry serial com
   int gameMode = getGameMode();
 
+  blockCheck(coords);
   // rocket move with player input and mode
   executeGameMode(jValL, jValR, gameMode);
 }
@@ -118,7 +121,7 @@ int getGameMode() {
 }
 
 void blockCheck(int coords[2]) {
-  blockLeftPos = blockRightPos = (coords[0]+coords[0]) > BOARD_WIDTH;
+  blockLeftPos = blockRightPos = (coords[0] + coords[1]) < BOARD_WIDTH;
 }
 
 void findCoordOrigin() {
@@ -167,20 +170,21 @@ void moveRocket(int leftSpeed, int rightSpeed) {
     digitalWrite(IN4, !dirR);
   }
 
-  // catch if rocket is at boarder
+  // catch if rocket is at boarder and set the speed of the motors
   if ((dirL && blockLeftPos) || (!dirL && blockLeftNeg)) {
     digitalWrite(IN1, false);
     digitalWrite(IN2, false);
     analogWrite(ENL, 0);
+  } else {
+    analogWrite(ENL, abs(leftSpeed));
   }
   if ((dirR && blockRightPos) || (!dirR && blockRightNeg)) {
     digitalWrite(IN3, false);
     digitalWrite(IN4, false);
     analogWrite(ENR, 0);
+  } else {
+    analogWrite(ENR, abs(rightSpeed));
   }
-  // Set the speed of the motors
-  analogWrite(ENL, abs(leftSpeed));
-  analogWrite(ENR, abs(rightSpeed));
 }
 
 void readEncoderL() {
@@ -201,15 +205,19 @@ void readEncoderR() {
   }
 }
 
-void readLSL() {
+void readRisingLSL() {
   blockLeftPos = dirL;
   blockLeftNeg = !dirL;
 }
 
-void readLSR() {
+void readRisingLSR() {
   blockRightPos = dirR;
   blockRightNeg = !dirR;
 }
+
+void readFallingLSL() { blockLeftPos = blockLeftNeg = false; }
+
+void readFallingLSR() { blockRightPos = blockRightNeg = false; }
 
 float mapFloat(long x, long in_min, long in_max, long out_min, long out_max) {
   return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) +
