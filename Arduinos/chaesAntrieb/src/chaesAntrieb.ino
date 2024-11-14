@@ -74,7 +74,7 @@ void setup() {
 
   // null the coords at begining
   findCoordOrigin();
-  Serial.begin(9600);
+  Serial.setTimeout(1);
 }
 
 void loop() {

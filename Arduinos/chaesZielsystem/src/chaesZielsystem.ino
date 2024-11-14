@@ -43,6 +43,7 @@ int i;
 void setup(){
 
   Serial.begin(9600);
+  Serial.setTimeout(1);
 
   servoMinus.attach(9, 500, 2500);
   servoPlus.attach(10, 500, 2500);
