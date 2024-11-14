@@ -47,6 +47,9 @@ bool blockRightNeg = false;
 bool dirL;
 bool dirR;
 
+// transportmodus
+bool trans = false;
+
 void setup() {
   // dc motor entcoder
   pinMode(C1L, INPUT);
@@ -74,40 +77,28 @@ void setup() {
 
   // null the coords at begining
   findCoordOrigin();
+  Serial.begin(9600);
   Serial.setTimeout(1);
 }
 
 void loop() {
-  // Read the position of the motors in an atomic block to avoid a potential
-  // misread if the interrupt coincides with this code running see:
-  // https://www.arduino.cc/reference/en/language/variables/variable-scope-qualifiers/volatile/
-  int posL = 0;
-  int posR = 0;
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    posL = posVL;
-    posR = posVR;
+  int* coords = getCoords();
+  sentCoords(coords);
+  int gameMode = 0;
+  int check = getGameMode();
+  if (check != -1){
+    gameMode = check;
   }
-  // coordinates
-  int* coords =
-      boxCoords(corectCoords(calculateCoords(BOARD_WIDTH, posL, posR),
-                             COORD_SCAL, BOARD_WIDTH / 2, BOARD_HIGHT),
-                BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
-  Serial.println();
-  // joystickvalues
-  int jValL = analogRead(JL);
-  int jValR = analogRead(JR);
-
-  // rasperry serial com
-  int gameMode = getGameMode();
-
   blockCheck(coords);
-  // rocket move with player input and mode
-  executeGameMode(jValL, jValR, gameMode);
+  executeGameMode(analogRead(JL), analogRead(JR), gameMode);
 }
 
 void executeGameMode(int jValL, int jValR, int gameMode) {
   switch (gameMode) {
-    case 0:
+    case 0: //transportmodus
+      trans = true;
+      transportmodus();
+    case 1:
       // move the motors in the direction of the joystick and different speed,
       // depending on joysticktilt
       moveRocket(
@@ -118,8 +109,32 @@ void executeGameMode(int jValL, int jValR, int gameMode) {
 }
 
 int getGameMode() {
-  // todoooooo
-  return 0;
+    if (Serial.available() > 0) {
+        return Serial.parseInt();
+    }
+    return -1; // Return a default value if no data is available
+}
+
+void sentCoords(int coords[2]){
+  Serial.print(coords[0]);
+  Serial.print('/');
+  Serial.println(coords[1]);
+}
+
+int* getCoords() {
+  // Read the position of the motors in an atomic block to avoid a potential
+  // misread if the interrupt coincides with this code running see:
+  // https://www.arduino.cc/reference/en/language/variables/variable-scope-qualifiers/volatile/
+  int posL = 0;
+  int posR = 0;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    posL = posVL;
+    posR = posVR;
+  }
+  // coordinates
+  return boxCoords(corectCoords(calculateCoords(BOARD_WIDTH, posL, posR),
+                                COORD_SCAL, BOARD_WIDTH / 2, BOARD_HIGHT),
+                   BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
 }
 
 void blockCheck(int coords[2]) {
@@ -203,6 +218,12 @@ void moveRocket(int leftSpeed, int rightSpeed) {
     analogWrite(ENR, 0);
   } else {
     analogWrite(ENR, abs(rightSpeed));
+  }
+}
+
+void transportmodus(){
+  while (!blockLeftPos && !blockRightPos) {
+    moveRocket(MAX_SPEED, MAX_SPEED);
   }
 }
 

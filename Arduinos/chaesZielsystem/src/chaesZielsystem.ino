@@ -103,7 +103,7 @@ void checkForInput() {
 	// Basically just a SerialRead Function which looks for the following inputs:
 	// STOP: Halt the Arms exactly where they are
 	// ORIGIN: Set the Arms to the starting position
-	// x/y: Coordinates, seperated by a slash. Set them as new Target coordinates. This part should also test if the coordinates are 'legal'
+	// x/y/v: Coordinates, seperated by a slash. Set them as new Target coordinates. This part should also test if the coordinates are 'legal'
 	// TRANS: Set the TransportMode
 
   if (Serial.available() > 0) {
