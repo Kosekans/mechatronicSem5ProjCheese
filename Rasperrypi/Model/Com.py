@@ -1,7 +1,7 @@
 import serial
 
 class Com:
-    def __init__(self, prt: str, brate: int, tout, arduino: serial):
+    def __init__(self, prt: str, brate: int, tout):
         self.arduino = serial.Serial(port=prt, baudrate=brate, timeout=tout)
     
     def writeSerial(self, x: str):

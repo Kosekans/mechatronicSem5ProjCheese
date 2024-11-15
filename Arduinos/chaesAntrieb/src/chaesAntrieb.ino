@@ -110,7 +110,7 @@ void executeGameMode(int jValL, int jValR, int gameMode) {
 
 int getGameMode() {
     if (Serial.available() > 0) {
-        return Serial.parseInt();
+        return Serial.read().parseInt();
     }
     return -1; // Return a default value if no data is available
 }
