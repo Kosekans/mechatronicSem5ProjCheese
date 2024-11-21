@@ -1,13 +1,9 @@
-from PySide6.QtGui import QGuiApplication
-import sys
 from models.gameState import GameState
 from views.viewManager import ViewManager
 from controllers.gameController import GameController
 from controllers.arduinoController import ArduinoController
 
 def main():
-    app = QGuiApplication(sys.argv)
-    
     # Initialize components
     gameState = GameState()
     arduinoController = ArduinoController()
@@ -15,12 +11,9 @@ def main():
         pass
     viewManager = ViewManager()
     gameController = GameController(gameState, viewManager, arduinoController)
-    
-    # Start the game
-    gameController.launch()
-    
-    # Start Qt event loop
-    sys.exit(app.exec())
+
+    # Run the application
+    viewManager.run()
 
 if __name__ == "__main__":
     main()

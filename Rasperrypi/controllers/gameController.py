@@ -19,9 +19,19 @@ class GameController:
         self.gameState = gameState
         self.viewManager = viewManager
         self.arduinoController = arduinoController
-
-    def launch(self):
-        self.viewManager.show()
+        # Connect the signal to the method
+        self.viewManager.buttonClicked.connect(self.handleButtonClicked)
+    
+    def handleButtonClicked(self, buttonId):
+        # Dictionary to map button IDs to their corresponding methods
+        button_actions = {
+            1: self.clickGameStart,
+            2: self.clickGameMode1
+        }
+        # Call the corresponding method if button ID exists
+        action = button_actions.get(buttonId)
+        if action:
+            action()
 
     # Click game start button from GUI
     def clickGameStart(self):
