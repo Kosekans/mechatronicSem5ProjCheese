@@ -28,16 +28,30 @@ class GameController:
             1: self.clickGameStart,
             2: self.clickGameMode1
         }
+        
         # Call the corresponding method if button ID exists
         action = button_actions.get(buttonId)
         if action:
-            action()
+            try:
+                action()
+            except Exception as e:
+                # Show error to user through ViewManager
+                self.viewManager.showWarning(str(e))
 
     # Click game start button from GUI
     def clickGameStart(self):
-        if self.gameState.goalCoords != None:
-            #chaesZielsystemCom.writeSerial(goalCoordsToString(currentGame.goalCoords,currentGame.goalCoordsVelo))
-            pass
+        # Validate game state before proceeding
+        if self.gameState.goalCoords is None:
+            raise ValueError("Please select Game Mode first")
+        
+        # Proceed with game start logic
+        #chaesZielsystemCom.writeSerial(goalCoordsToString(currentGame.goalCoords,currentGame.goalCoordsVelo))
+        pass
+
+    def clickGameMode1(self):
+        # Set goal coordinates for Game Mode 1
+        self.gameState.goalCoords = HelperFunctions.createGoalCoords()
+        self.gameState.goalCoordsVelo = 100
 
     def clickGameMode1(self):
         self.gameState.goalCoords = HelperFunctions.createGoalCoords()

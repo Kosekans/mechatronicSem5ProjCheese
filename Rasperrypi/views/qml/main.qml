@@ -2,6 +2,7 @@ import QtQuick 2.12
 import QtQuick.Window 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
+import QtQuick.Dialogs 1.3
 
 Window {
     visible: true
@@ -27,5 +28,19 @@ Window {
             Layout.fillHeight: true
             onClicked: viewManager.onButtonClick(2)
         }
+    }
+
+    MessageDialog {
+        id: warningDialog
+        title: "Warning"
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok
+    }
+
+    Component.onCompleted: {
+        viewManager.warningMessage.connect(function(message) {
+            warningDialog.text = message
+            warningDialog.open()
+        })
     }
 }
