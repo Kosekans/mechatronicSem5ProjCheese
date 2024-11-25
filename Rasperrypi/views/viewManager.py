@@ -59,3 +59,17 @@ class ViewManager(QObject):
     def showWarning(self, message):
         # Emit a signal to show warning in QML
         self.warningMessage.emit(message)
+
+    @pyqtSlot(QObject)
+    def setStackView(self, stack_view):
+        self.stackView = stack_view
+
+    @pyqtSlot(str)
+    def navigateToPage(self, page_name):
+        if self.stackView:
+            self.stackView.push(f"qrc:/{page_name}.qml")
+
+    @pyqtSlot()
+    def goBack(self):
+        if self.stackView:
+            self.stackView.pop()

@@ -7,8 +7,8 @@ def main():
     # Initialize components
     gameState = GameState()
     arduinoController = ArduinoController()
-    while not arduinoController.initialize_hardware():
-        pass
+    #while not arduinoController.initialize_hardware():
+    #    pass
     viewManager = ViewManager()
     gameController = GameController(gameState, viewManager, arduinoController)
 
