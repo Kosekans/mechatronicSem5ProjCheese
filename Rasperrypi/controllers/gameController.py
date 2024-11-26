@@ -19,6 +19,7 @@ class GameController:
         self.gameState = gameState
         self.viewManager = viewManager
         self.arduinoController = arduinoController
+        self.inputController = inputController
         # Connect the signal to the method
         self.viewManager.buttonClicked.connect(self.handleButtonClicked)
         self.inputController.buttonClicked.connect(self.handleButtonClicked)

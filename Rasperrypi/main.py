@@ -3,6 +3,7 @@ from views.viewManager import ViewManager
 from controllers import *
 from controllers.gameController import GameController
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
 import sys
 
 def main():
@@ -15,6 +16,18 @@ def main():
     viewManager = ViewManager(app)
     inputController = InputController()
     gameController = GameController(gameState, viewManager, arduinoController, inputController)
+
+    # Force fullscreen and disable window controls
+    for widget in app.topLevelWidgets():  # Changed from topLevelWindows to topLevelWidgets
+        widget.setWindowFlags(
+            Qt.Window |
+            Qt.FramelessWindowHint |
+            Qt.WindowStaysOnTopHint
+        )
+        widget.showFullScreen()
+        
+        # Prevent Alt+F4
+        widget.closeEvent = lambda event: event.ignore()
 
     # Connect signals/slots after all components exist
     viewManager.connectSignals(gameController)

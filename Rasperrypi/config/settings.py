@@ -24,8 +24,6 @@ RASPBERRY_PI_SETTINGS = {
 }
 
 QML_SETTINGS = {
-    'WINDOW_WIDTH': 800,
-    'WINDOW_HEIGHT': 600,
     'TITLE': 'chäääääs'
 }
 

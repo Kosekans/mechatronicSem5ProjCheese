@@ -7,7 +7,7 @@ from typing import List
 current_dir = Path(__file__).parent
 sys.path.append(str(current_dir.parent))
 
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from config.settings import QML_SETTINGS
@@ -69,10 +69,12 @@ class ViewManager(QObject):
         """
         # Expose this instance to QML for direct access
         self.engine.rootContext().setContextProperty("viewManager", self)
+        # Get actual screen dimensions
+        screen = QDesktopWidget().screenGeometry()
         
         # Configure window properties in QML context
-        self.engine.rootContext().setContextProperty("windowWidth", QML_SETTINGS['WINDOW_WIDTH'])
-        self.engine.rootContext().setContextProperty("windowHeight", QML_SETTINGS['WINDOW_HEIGHT'])
+        self.engine.rootContext().setContextProperty("windowWidth", screen.width())
+        self.engine.rootContext().setContextProperty("windowHeight", screen.height())
         self.engine.rootContext().setContextProperty("windowTitle", QML_SETTINGS['TITLE'])
         
         # Locate and validate all required QML files
