@@ -1,7 +1,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List
 
 # Add parent directory to system path to enable imports from parent modules
 current_dir = Path(__file__).parent

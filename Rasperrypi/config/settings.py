@@ -15,6 +15,13 @@ ARDUINO_SETTINGS = {
     }
 }
 
+RASPBERRY_PI_SETTINGS = {
+    'GPIO_PINS': {
+        'START_BUTTON_PIN': 17, # GPIO17 physical pin 11
+        'LIGHT_BARRIER_PIN': 18 # GPIO18 physical pin 12
+    },
+    'OS_USERNAME': 'raspberrypi'
+}
 
 QML_SETTINGS = {
     'WINDOW_WIDTH': 800,

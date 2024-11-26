@@ -1,7 +1,7 @@
 from models.gameState import GameState
 from views.viewManager import ViewManager
+from controllers import *
 from controllers.gameController import GameController
-from controllers.arduinoController import ArduinoController
 from PyQt5.QtWidgets import QApplication
 import sys
 
@@ -13,7 +13,8 @@ def main():
     gameState = GameState()
     arduinoController = ArduinoController()
     viewManager = ViewManager(app)
-    gameController = GameController(gameState, viewManager, arduinoController)
+    inputController = InputController()
+    gameController = GameController(gameState, viewManager, arduinoController, inputController)
 
     # Connect signals/slots after all components exist
     viewManager.connectSignals(gameController)

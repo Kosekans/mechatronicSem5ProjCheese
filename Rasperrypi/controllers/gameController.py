@@ -7,7 +7,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.join(current_dir, '..')
 sys.path.append(parent_dir)
 
-from controllers.arduinoController import ArduinoController
+from controllers import *
 from models import *
 from views.viewManager import ViewManager
 from utils.helperFunctions import HelperFunctions
@@ -15,12 +15,13 @@ from utils.helperFunctions import HelperFunctions
 from typing import List
 
 class GameController:
-    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController):
+    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, inputController: InputController):
         self.gameState = gameState
         self.viewManager = viewManager
         self.arduinoController = arduinoController
         # Connect the signal to the method
         self.viewManager.buttonClicked.connect(self.handleButtonClicked)
+        self.inputController.buttonClicked.connect(self.handleButtonClicked)
     
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
