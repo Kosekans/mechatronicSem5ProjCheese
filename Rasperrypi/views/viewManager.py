@@ -1,75 +1,99 @@
-import sys
 import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional
 
-# Get the current file's directory
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# Add the parent directory to the system path
-parent_dir = os.path.join(current_dir, '..')
-sys.path.append(parent_dir)
+# Get the current file's directory and add parent to path
+current_dir = Path(__file__).parent
+sys.path.append(str(current_dir.parent))
 
-from PyQt5.QtGui import QGuiApplication
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from config.settings import QML_SETTINGS
 
+# viewManager.py
 class ViewManager(QObject):
-    buttonClicked = pyqtSignal(int)
+    """Manages QML views and navigation"""
+    
+    # Signals
+    buttonClicked = pyqtSignal(str)
     warningMessage = pyqtSignal(str)
+    pageChanged = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, app: QApplication) -> None:
         super().__init__()
-        # Create the Qt Application
-        self.app = QGuiApplication(sys.argv)
-        
-        # Create QML engine
+        self.app = app
         self.engine = QQmlApplicationEngine()
-        
-        # Expose this Python object to QML
+        self.page_stack: List[str] = ['main']
+        self.setupPages()
+        self.setupUI()
+
+    def setupPages(self) -> None:
+        """Setup available QML pages"""
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        self.qml_dir = os.path.join(current_dir, 'qml')
+        # Register the QML directory for imports
+        self.engine.addImportPath(self.qml_dir)
+        # Map page names to their QML file names
+        self.page_files = {
+            'main': 'mainMenu.qml',
+            'settings': 'settings.qml',
+            'highscore': 'highscore.qml',
+            'credits': 'credits.qml'
+        }
+        self.pages = set(self.page_files.keys())
+
+    def setupUI(self) -> None:
+        # Expose manager to QML
         self.engine.rootContext().setContextProperty("viewManager", self)
         
-        # Set QML context properties from settings
+        # Set window properties
         self.engine.rootContext().setContextProperty("windowWidth", QML_SETTINGS['WINDOW_WIDTH'])
         self.engine.rootContext().setContextProperty("windowHeight", QML_SETTINGS['WINDOW_HEIGHT'])
         self.engine.rootContext().setContextProperty("windowTitle", QML_SETTINGS['TITLE'])
         
-        # Get the absolute path to the main.qml file
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        qml_path = os.path.join(current_dir, 'qml', os.path.basename(QML_SETTINGS['QML_MAIN_FILE']))
+        qml_path = os.path.join(current_dir, 'qml', 'mainWindow.qml')
         
-        # Load the main QML file using absolute path
+        # Verify all required QML files exist
+        required_files = [qml_path]
+        for qml_file in self.page_files.values():
+            required_files.append(os.path.join(self.qml_dir, qml_file))
+            
+        for file in required_files:
+            if not os.path.exists(file):
+                raise FileNotFoundError(f"Required QML file not found: {file}")
+            
         self.engine.load(qml_path)
-
-        # Get the root object
-        if not self.engine.rootObjects():
-            sys.exit(-1)
         
-        # Expose warning signal to QML
-        self.engine.rootContext().setContextProperty("viewManager", self)
+        # Check for QML loading errors
+        if not self.engine.rootObjects():
+            raise RuntimeError("Failed to load QML")
 
-    def run(self):
-        # Start the event loop
-        sys.exit(self.app.exec_())
+    def navigateToPage(self, page_name: str) -> None:
+        """Navigate to a new page"""
+        if page_name in self.pages:
+            self.page_stack.append(page_name)
+            self.pageChanged.emit(page_name)
 
-    @pyqtSlot(int)
-    def onButtonClick(self, buttonId):
-        # Emit signal when button is clicked in QML
-        self.buttonClicked.emit(buttonId)
+    def goBack(self) -> None:
+        """Navigate to previous page"""
+        if len(self.page_stack) > 1:
+            self.page_stack.pop()
+            previous = self.page_stack[-1]
+            self.pageChanged.emit(previous)
     
+    def connectSignals(self, controller) -> None:
+        """Connect signals to controller slots"""
+        self.buttonClicked.connect(controller.handleButtonClicked)
+
     @pyqtSlot(str)
-    def showWarning(self, message):
-        # Emit a signal to show warning in QML
+    def onButtonClick(self, button_id: str) -> None:
+        """Handle button clicks from QML"""
+        self.buttonClicked.emit(button_id)
+
+    @pyqtSlot(str)
+    def showWarning(self, message: str) -> None:
+        """Show warning dialog in QML"""
         self.warningMessage.emit(message)
-
-    @pyqtSlot(QObject)
-    def setStackView(self, stack_view):
-        self.stackView = stack_view
-
-    @pyqtSlot(str)
-    def navigateToPage(self, page_name):
-        if self.stackView:
-            self.stackView.push(f"qrc:/{page_name}.qml")
-
-    @pyqtSlot()
-    def goBack(self):
-        if self.stackView:
-            self.stackView.pop()

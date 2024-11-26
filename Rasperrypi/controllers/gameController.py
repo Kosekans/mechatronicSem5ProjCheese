@@ -22,11 +22,18 @@ class GameController:
         # Connect the signal to the method
         self.viewManager.buttonClicked.connect(self.handleButtonClicked)
     
-    def handleButtonClicked(self, buttonId):
+    def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
         button_actions = {
-            1: self.clickGameStart,
-            2: self.clickGameMode1
+            'startGame': self.clickStartGame,
+            'Select Gamemode': self.clickSelectGameMode,
+            'Ring zeigt Ziel': self.clickGMGoal,
+            'Verfolgungsmodus': self.clickGMFollow,
+            'settings': self.clickSettings,
+            'credits': self.clickCredits,
+            'highscore': self.clickHighscore,
+            'SaveSettings': self.clickSaveSettings,
+            'back': self.clickBack
         }
         
         # Call the corresponding method if button ID exists
@@ -38,21 +45,39 @@ class GameController:
                 # Show error to user through ViewManager
                 self.viewManager.showWarning(str(e))
 
-    # Click game start button from GUI
-    def clickGameStart(self):
+    #buttons from GUI
+    def clickStartGame(self):
         # Validate game state before proceeding
-        if self.gameState.goalCoords is None:
+        if self.gameState.gameMode is None:
             raise ValueError("Please select Game Mode first")
-        
         # Proceed with game start logic
         #chaesZielsystemCom.writeSerial(goalCoordsToString(currentGame.goalCoords,currentGame.goalCoordsVelo))
         pass
 
-    def clickGameMode1(self):
-        # Set goal coordinates for Game Mode 1
-        self.gameState.goalCoords = HelperFunctions.createGoalCoords()
-        self.gameState.goalCoordsVelo = 100
+    def clickSettings(self):
+        self.viewManager.navigateToPage('settings')
 
-    def clickGameMode1(self):
+    def clickCredits(self):
+        self.viewManager.navigateToPage('credits')
+    
+    def clickHighscore(self):
+        self.viewManager.navigateToPage('highscore')
+
+    def clickSelectGameMode(self):
+        self.gameState.gameMode = None
+
+    def clickGMGoal(self):
+        # Set goal coordinates for Game Mode 1
+        self.gameState.gameMode = 'goal'
         self.gameState.goalCoords = HelperFunctions.createGoalCoords()
         self.gameState.goalCoordsVelo = 100
+    
+    def clickGMFollow(self):
+        self.gameState.gameMode = 'follow'
+
+    def clickSaveSettings(self):
+        # Save settings to (maybe???????????) config file or sertain model object
+        pass
+
+    def clickBack(self):
+        self.viewManager.goBack()

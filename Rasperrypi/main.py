@@ -2,18 +2,24 @@ from models.gameState import GameState
 from views.viewManager import ViewManager
 from controllers.gameController import GameController
 from controllers.arduinoController import ArduinoController
+from PyQt5.QtWidgets import QApplication
+import sys
 
 def main():
-    # Initialize components
+    # Create core application
+    app = QApplication(sys.argv)
+    
+    # Initialize components with explicit dependencies
     gameState = GameState()
     arduinoController = ArduinoController()
-    #while not arduinoController.initialize_hardware():
-    #    pass
-    viewManager = ViewManager()
+    viewManager = ViewManager(app)
     gameController = GameController(gameState, viewManager, arduinoController)
 
-    # Run the application
-    viewManager.run()
+    # Connect signals/slots after all components exist
+    viewManager.connectSignals(gameController)
+    
+    # Start application
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
     main()
