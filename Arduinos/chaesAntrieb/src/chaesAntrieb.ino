@@ -7,14 +7,14 @@
 
 // Define the pins for the left motor
 #define ENL 9  // pmw pin
-#define IN1 8
-#define IN2 7
+#define IN1 7
+#define IN2 8
 #define C1L 18  // interupt
 #define C2L 19  // interupt
 // Define the pins for the right motor
 #define ENR 4  // pmw pin
-#define IN3 6
-#define IN4 5
+#define IN3 5
+#define IN4 6
 #define C1R 20  // interupt
 #define C2R 21  // interupt
 // define the pins for the joysticks
@@ -36,6 +36,7 @@ const long MAX_JVAL = 1023;  // 1023 max value for joysticks. min value is 0
 const int BOARD_WIDTH = 533;
 const int BOARD_HIGHT = 770;
 const int COORD_SCAL = 1;  // coord = encodersteps / SCAL
+const int DEADZONE = 30;  // deadzone for the joysticks
 
 // if boarder is near
 bool blockLeftPos = false;
@@ -47,8 +48,10 @@ bool blockRightNeg = false;
 bool dirL;
 bool dirR;
 
-// transportmodus
-bool trans = false;
+// modi: -1 = dont move/ default, 0 = transportmode, 1 = joystick,...
+int gameMode = -1;
+// coordinates of the rocket
+int* coords;
 
 void setup() {
   // dc motor entcoder
@@ -76,28 +79,45 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(LSR), readFallingLSR, FALLING);
 
   // null the coords at begining
-  findCoordOrigin();
+  //findCoordOrigin();
   Serial.begin(9600);
-  Serial.setTimeout(1);
+  Serial.setTimeout(10);
 }
 
 void loop() {
-  int* coords = getCoords();
-  sentCoords(coords);
-  int gameMode = 0;
-  int check = getGameMode();
-  if (check != -1){
-    gameMode = check;
-  }
-  blockCheck(coords);
+  checkForInput();/*
+  coords = getCoords();
+  blockCheck(coords);*/
   executeGameMode(analogRead(JL), analogRead(JR), gameMode);
+}
+
+void checkForInput() {
+  if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');
+    if (input == "ID") {
+      Serial.println("chaesAntrieb");
+      return;
+    }
+    if (input == "transportmode") {
+      gameMode = 0;
+      return;
+    }
+    if (input == "gameOver"){
+      sentCoords(coords);
+      gameMode = -1;
+      return;
+    }
+  }
 }
 
 void executeGameMode(int jValL, int jValR, int gameMode) {
   switch (gameMode) {
+    case -1: //default
+      moveRocket(0, 0);
+      break;
     case 0: //transportmodus
-      trans = true;
       transportmodus();
+      break;
     case 1:
       // move the motors in the direction of the joystick and different speed,
       // depending on joysticktilt
@@ -108,17 +128,8 @@ void executeGameMode(int jValL, int jValR, int gameMode) {
   }
 }
 
-int getGameMode() {
-    if (Serial.available() > 0) {
-        return Serial.read().parseInt();
-    }
-    return -1; // Return a default value if no data is available
-}
-
 void sentCoords(int coords[2]){
-  Serial.print(coords[0]);
-  Serial.print('/');
-  Serial.println(coords[1]);
+  Serial.println(String(coords[0]) + "/" + String(coords[1]));
 }
 
 int* getCoords() {
@@ -186,7 +197,7 @@ int* boxCoords(int coords[2], int leftBorder, int rightBorder, int lowerBorder,
 void moveRocket(int leftSpeed, int rightSpeed) {
   // Control the direction of the left motor
   dirL = leftSpeed > 0;
-  if (leftSpeed == 0) {
+  if (-DEADZONE <= leftSpeed && leftSpeed <= DEADZONE) {
     digitalWrite(IN1, false);
     digitalWrite(IN2, false);
   } else {
@@ -196,7 +207,7 @@ void moveRocket(int leftSpeed, int rightSpeed) {
 
   // Control the direction of the right motor
   dirR = rightSpeed > 0;
-  if (rightSpeed == 0) {
+  if (-DEADZONE <= leftSpeed && leftSpeed <= DEADZONE) {
     digitalWrite(IN3, false);
     digitalWrite(IN4, false);
   } else {

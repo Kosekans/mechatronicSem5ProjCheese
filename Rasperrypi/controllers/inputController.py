@@ -8,7 +8,7 @@ current_dir = Path(__file__).parent
 parent_dir = str(current_dir.parent)
 sys.path.append(parent_dir)
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import platform
 
 from config.settings import RASPBERRY_PI_SETTINGS
@@ -99,8 +99,11 @@ class InputController(QObject):
             self.buttonClicked.emit("lightSensor")
     
     def cleanup(self):
-        """
-        Clean up GPIO resources.
-        Should be called when program exits.
-        """
         GPIO.cleanup()
+
+    def connectSignals(self, controller) -> None:
+        self.buttonClicked.connect(controller.handleButtonClicked)
+
+    @pyqtSlot(str)
+    def onButtonClick(self, button_id: str) -> None:
+        self.buttonClicked.emit(button_id)

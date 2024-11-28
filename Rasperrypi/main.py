@@ -16,9 +16,8 @@ def main():
     viewManager = ViewManager(app)
     inputController = InputController()
     gameController = GameController(gameState, viewManager, arduinoController, inputController)
-
     # Force fullscreen and disable window controls
-    for widget in app.topLevelWidgets():  # Changed from topLevelWindows to topLevelWidgets
+    for widget in app.topLevelWidgets():
         widget.setWindowFlags(
             Qt.Window |
             Qt.FramelessWindowHint |
@@ -31,9 +30,10 @@ def main():
 
     # Connect signals/slots after all components exist
     viewManager.connectSignals(gameController)
+    inputController.connectSignals(gameController)
     
     # Start application
     sys.exit(app.exec_())
-
+    
 if __name__ == "__main__":
     main()

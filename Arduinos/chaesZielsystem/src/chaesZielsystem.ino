@@ -43,7 +43,7 @@ int i;
 void setup(){
 
   Serial.begin(9600);
-  Serial.setTimeout(1);
+  Serial.setTimeout(10);
 
   servoMinus.attach(9, 500, 2500);
   servoPlus.attach(10, 500, 2500);
@@ -70,12 +70,12 @@ void setup(){
 }
 
 void loop(){
-	checkForInput();
+	checkForInput();/*
 	if (targetChanged) {
 		calculate();
 		targetChanged = false;
 	}
-	drive();
+	drive();*/
 }
 
 void setCoordinates(){
@@ -104,12 +104,13 @@ void checkForInput() {
 	// STOP: Halt the Arms exactly where they are
 	// ORIGIN: Set the Arms to the starting position
 	// x/y/v: Coordinates, seperated by a slash. Set them as new Target coordinates. This part should also test if the coordinates are 'legal'
-	// TRANS: Set the TransportMode
-
+	// trans: Set the TransportMode
   if (Serial.available() > 0) {
-    String input = Serial.readStringUntil('\n');  // Read input until newline
-    input.trim();  // Remove any whitespace
-
+    String input = Serial.readStringUntil('\n');
+    if (input == "ID") {
+      Serial.println("chaesZielsystem");
+      return;
+    }
     // Check if input is in x/y or x/y/velocity format
     int firstSlash = input.indexOf('/');
     int secondSlash = input.indexOf('/', firstSlash + 1);
@@ -157,7 +158,7 @@ void checkForInput() {
       mode = 2;
       targetChanged = true;
     } 
-    else if (input == "TRANS") {
+    else if (input == "trans") {
       mode = 4; // Transport Mode
     } else if (input == "INFO") {
       Serial.print("targetAnglePlus: ");
@@ -182,7 +183,7 @@ void checkForInput() {
       Serial.println("");
     }  
     else {
-      Serial.println("Error: Unknown command");
+      //Serial.println("Error: Unknown command");
     }
   }
 }
@@ -351,4 +352,3 @@ void debugInt(String message, int value){
   Serial.print(message);
   Serial.println(value);
 }
-

@@ -15,7 +15,7 @@ Item {
         Button {
             text: "Back"
             Layout.fillWidth: true
-            onClicked: viewManager.onButtonClick("back")
+            onClicked: viewManager.onPageChangeClick("back")
         }
     }
 }

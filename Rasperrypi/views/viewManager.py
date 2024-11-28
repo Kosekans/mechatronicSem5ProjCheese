@@ -10,7 +10,8 @@ sys.path.append(str(current_dir.parent))
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
-from config.settings import QML_SETTINGS
+
+from config.settings import QML_SETTINGS, GAME_SETTINGS  # Update import at top
 
 class ViewManager(QObject):
     """
@@ -22,6 +23,12 @@ class ViewManager(QObject):
     buttonClicked = pyqtSignal(str)  # Emitted when a button is clicked in QML
     warningMessage = pyqtSignal(str)  # Emitted to display warning messages in QML
     pageChanged = pyqtSignal(str)     # Emitted when navigation between pages occurs
+    checkboxChanged = pyqtSignal(str, bool)  # Emitted when checkbox state changes
+    sliderChanged = pyqtSignal(str, float)   # Emitted when slider value changes
+    gameModeChanged = pyqtSignal(str)        # Emitted when game mode changes
+    # Add new signal for state updates
+    gameStateUpdated = pyqtSignal('QVariant')
+    initialStateLoaded = pyqtSignal()  # Add new signal
 
     def __init__(self, app: QApplication) -> None:
         """
@@ -55,7 +62,11 @@ class ViewManager(QObject):
             'main': 'mainMenu.qml',
             'settings': 'settings.qml',
             'highscore': 'highscore.qml',
-            'credits': 'credits.qml'
+            'credits': 'credits.qml',
+            'setGameMode': 'gameModeSettings.qml',
+            'gameModeInfo': 'gameModeInfo.qml',
+            'popUpHighscore': 'popUpHighscore.qml',
+            'runningGame': 'runningGame.qml'
         }
         self.pages = set(self.page_files.keys())
 
@@ -76,6 +87,7 @@ class ViewManager(QObject):
         self.engine.rootContext().setContextProperty("windowWidth", screen.width())
         self.engine.rootContext().setContextProperty("windowHeight", screen.height())
         self.engine.rootContext().setContextProperty("windowTitle", QML_SETTINGS['TITLE'])
+        self.engine.rootContext().setContextProperty("warningMessage", self.warningMessage)  
         
         # Locate and validate all required QML files
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -105,24 +117,59 @@ class ViewManager(QObject):
         if page_name in self.pages:
             self.page_stack.append(page_name)
             self.pageChanged.emit(page_name)
+            # Directly load game state when navigating to gameModeSettings
+            if page_name == 'setGameMode':
+                self.loadGameModeSettingInfo()
 
     def goBack(self) -> None:
-        """
-        Navigate to the previous page in the navigation stack.
-        Does nothing if already at the root page.
-        """
+        """Navigate to the previous page in the navigation stack."""
         if len(self.page_stack) > 1:
             self.page_stack.pop()
             previous = self.page_stack[-1]
             self.pageChanged.emit(previous)
+            # Load game state when returning to gameModeSettings
+            if previous == 'setGameMode':
+                self.loadGameModeSettingInfo()
+                self.initialStateLoaded.emit()
     
     def connectSignals(self, controller) -> None:
         """
         Connect this manager's signals to controller slots.
+        This is the ONLY place where signals should be connected.
         Args:
             controller: The controller instance to connect signals to
         """
+        # Safely disconnect existing connections
+        try:
+            self.buttonClicked.disconnect()
+            self.checkboxChanged.disconnect()
+            self.sliderChanged.disconnect()
+            self.gameModeChanged.disconnect()
+        except TypeError:
+            # Ignore errors if signals weren't connected
+            pass
+        
+        # Connect signals
         self.buttonClicked.connect(controller.handleButtonClicked)
+        self.checkboxChanged.connect(controller.handleCheckboxChanged)
+        self.sliderChanged.connect(controller.handleSliderChanged)
+        self.gameModeChanged.connect(controller.handleGameModeChanged)
+        controller.gameStateChanged.connect(self.handleGameStateChanged)
+        self.controller = controller  # Store controller reference
+
+    @pyqtSlot()
+    def loadGameModeSettingInfo(self) -> None:
+        """Request and broadcast current game state to QML"""
+        if hasattr(self, 'controller'):
+            state = self.controller.getGameStateInfo()
+            self.gameStateUpdated.emit(state)
+
+    @pyqtSlot(str)
+    def onPageChangeClick(self, button_id: str) -> None:
+        if button_id == 'back':
+            self.goBack()
+        else:
+            self.navigateToPage(button_id)
 
     @pyqtSlot(str)
     def onButtonClick(self, button_id: str) -> None:
@@ -141,3 +188,47 @@ class ViewManager(QObject):
             message (str): Warning message to display
         """
         self.warningMessage.emit(message)
+
+    @pyqtSlot(str, bool)
+    def onCheckboxChanged(self, checkbox_id: str, is_checked: bool) -> None:
+        """
+        Handle checkbox state changes from QML interface.
+        Args:
+            checkbox_id (str): Identifier of the checkbox
+            is_checked (bool): New state of the checkbox
+        """
+        self.checkboxChanged.emit(checkbox_id, is_checked)
+
+    @pyqtSlot(str, float)
+    def onSliderValueChanged(self, slider_id: str, slider_value: float) -> None:
+        """
+        Handle slider value changes from QML interface.
+        Args:
+            slider_id (str): Identifier of the slider
+            slider_value (float): New value of the slider
+        """
+        self.sliderChanged.emit(slider_id, slider_value)
+
+    @pyqtSlot(str)
+    def onGameModeChanged(self, mode: str) -> None:
+        """
+        Handle game mode changes from QML interface.
+        Args:
+            mode (str): Selected game mode
+        """
+        self.gameModeChanged.emit(mode)
+
+    @pyqtSlot(str, result=str)
+    def getGameMode(self, mode_key: str) -> str:
+        """
+        Get game mode value from settings for QML.
+        Args:
+            mode_key (str): Key of the game mode
+        Returns:
+            str: The game mode value from settings
+        """
+        return GAME_SETTINGS['GAME_MODES'].get(mode_key, '')
+
+    def handleGameStateChanged(self, state: dict) -> None:
+        """Handle game state updates from controller"""
+        self.gameStateUpdated.emit(state)

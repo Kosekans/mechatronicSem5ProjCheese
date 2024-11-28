@@ -14,24 +14,46 @@ class ArduinoInterface:
     def __init__(self, arduino_id: str):
         # Use settings from config file
         self.settings = ARDUINO_SETTINGS[arduino_id]
-        self.port = self.settings['PORT']
-        self.baud_rate = self.settings['BAUD_RATE']
+        self.id = self.settings['ID']
+        self.port: str = None
+        self.baudRate = self.settings['BAUD_RATE']
         self.timeout = self.settings['TIMEOUT']
         self.bytesize = self.settings['BYTESIZE']
+        self.characterEncoding = self.settings['CHARACTER_ENCODING']
         self.connection = None
 
     def connect(self):
         self.connection = SerialCommunication.create_connection(
             self.port,
-            self.baud_rate,
+            self.baudRate,
             self.timeout,
             self.bytesize
         )
         return self.connection is not None
     
     def writeSerial(self, x: str):
-        self.connection.write(bytes(x, 'utf-8'))
+        self.connection.write(bytes(x, self.characterEncoding))
 
     def readSerialLine(self):
-        data: str = self.connection.readLine()#.decode('utf-8').strip()
+        data: str = self.connection.readline().decode(self.characterEncoding).strip()
         return data
+    
+    def updatePortSettings(self):
+        connectedPorts = SerialCommunication.findConnectedPorts(
+            self.baudRate,
+            self.timeout,
+            self.bytesize
+        )
+        for port in connectedPorts:
+            answer: str = SerialCommunication.testComunication(
+                port,
+                self.baudRate,
+                self.timeout,
+                self.bytesize,
+                self.characterEncoding,
+                'ID\n'
+            )
+            if answer == self.id:
+                self.port = port
+                return True
+        return False

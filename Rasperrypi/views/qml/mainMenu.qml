@@ -19,45 +19,29 @@ Item {
             Layout.fillHeight: true
             onClicked: viewManager.onButtonClick("startGame")
         }
-        ComboBox {
-            id: gameModeComboBox
+        Button {
+            text: "Set Game Mode"
             Layout.fillWidth: true
             Layout.fillHeight: true
-            model: ["Select Gamemode", "Ring zeigt Ziel", "Verfolgungsmodus"]
-            onCurrentTextChanged: viewManager.onButtonClick(currentText)
+            onClicked: viewManager.onPageChangeClick("setGameMode")
         }
         Button {
             text: "Settings"
             Layout.fillWidth: true
             Layout.fillHeight: true
-            onClicked: viewManager.onButtonClick("settings")
+            onClicked: viewManager.onPageChangeClick("settings")
         }
         Button {
             text: "Credits"
             Layout.fillWidth: true
             Layout.fillHeight: true
-            onClicked: viewManager.onButtonClick("credits")
+            onClicked: viewManager.onPageChangeClick("credits")
         }
         Button {
             text: "Highscore"
             Layout.fillWidth: true
             Layout.fillHeight: true
-            onClicked: viewManager.onButtonClick("highscore")
-        }
-    }
-
-    MessageDialog {
-        id: warningDialog
-        title: "Warning"
-        icon: StandardIcon.Warning
-        standardButtons: StandardButton.Ok
-    }
-
-    Connections {
-        target: viewManager
-        function onWarningMessage(message) {
-            warningDialog.text = message
-            warningDialog.open()
+            onClicked: viewManager.onPageChangeClick("highscore")
         }
     }
 }

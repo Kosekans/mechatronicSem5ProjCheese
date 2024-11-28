@@ -17,13 +17,25 @@ Item {
         Button {
             text: "Back"
             Layout.fillWidth: true
-            onClicked: viewManager.onButtonClick("back")
+            onClicked: viewManager.onPageChangeClick("back")
         }
 
         Button {
             text: "Save Settings"
             Layout.fillWidth: true
-            onClicked: viewManager.onButtonClick("SaveSettings")
+            onClicked: viewManager.onButtonClick("saveSettings")
+        }
+
+        Button {
+            text: "Update Ports"
+            Layout.fillWidth: true
+            onClicked: viewManager.onButtonClick("updatePorts")
+        }
+
+        Button {
+            text: "Initialize Serial Comunication with Arduinos"
+            Layout.fillWidth: true
+            onClicked: viewManager.onButtonClick("initializeHardware")
         }
     }
 }

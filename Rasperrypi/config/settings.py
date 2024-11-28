@@ -2,16 +2,18 @@ import serial
 
 ARDUINO_SETTINGS = {
     'chaesAntrieb': {
-        'PORT': 'COM5',#to do: find the correct port on raspy
+        'ID': 'chaesAntrieb',
         'BAUD_RATE': 9600,
-        'TIMEOUT': 1,
-        'BYTESIZE':serial.EIGHTBITS
+        'TIMEOUT': 1,  # Increased to 1 second
+        'BYTESIZE': serial.EIGHTBITS,
+        'CHARACTER_ENCODING': 'utf-8'
     },
     'chaesZielsystem': {
-        'PORT': 'COM6',
+        'ID': 'chaesZielsystem',
         'BAUD_RATE': 9600,
-        'TIMEOUT': 1,
-        'BYTESIZE':serial.EIGHTBITS
+        'TIMEOUT': 1,  # Increased to 1 second
+        'BYTESIZE': serial.EIGHTBITS,
+        'CHARACTER_ENCODING': 'utf-8'
     }
 }
 
@@ -28,5 +30,29 @@ QML_SETTINGS = {
 }
 
 GAME_SETTINGS = {
-    'ZIELSYSTEM_VELOCITY': [10, 100, 300]
+    'GAME_MODES': {
+        'follow': 'follow',
+        'goal': 'goal',
+        'infinity': 'infinity',
+        'inverseFollow': 'inverseFollow'
+    },
+    'GAME_BOOLS_DEFAULT': {
+        'inverseSticksDefault': False,
+        'randomInverseSticksDefault': False,
+        'randomRocketVelocityDefault': False,
+        'randomLatencyDefault': False
+    },
+    'GAME_VALUES_DEFAULT': {
+        'rocketVelocityDefault': 1, #[0,1]
+        'latencyDefault': 0 #ms
+    }
+}
+
+ERROR_MESSAGES = {
+    'NO_GAME_MODE_SELECTED': 'Please select Game Mode first',
+    'HARDWARE_NOT_INITIALIZED': 'Comunication with Arduinos not initialized, go to settings and initialize hardware',
+    'HARDWARE_INITIALIZATION_FAILED': 'Hardware initialization failed, try updating the port in settings or check the connection',
+    'PORT_UPDATE_FAILED': 'Port update failed, check the connection and try again',
+    'NO_PORTS_FOUND': 'No connected ports found, update the ports in settings',
+    'SUCCESS': 'passt scho, het klappt'
 }
