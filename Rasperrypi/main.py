@@ -1,63 +1,22 @@
+import json
 from models.gameState import GameState
 from views.viewManager import ViewManager
 from controllers import *
-from controllers.gameController import GameController
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
-import os
 import sys
-import subprocess
-import socket
-import filecmp
-import shutil
+import os
+from controllers.gameController import GameController
 
-def check_internet_connection():
-    try:
-        # Connect to a well-known host (Google DNS) to check for internet connection
-        socket.create_connection(("8.8.8.8", 53), timeout=5)
-        return True
-    except OSError:
-        return False
-
-def update_repository():
-    try:
-        subprocess.check_call(["git", "pull"])
-        return True
-    except subprocess.CalledProcessError as e:
-        return False
-
-def install_requirements():
-    try:
-        requirements_path = os.path.join(os.path.dirname(__file__), 'config', 'requirements.txt')
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", requirements_path])
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to install requirements: {e}")
-        return False
-
-def requirements_changed():
-    current_requirements = os.path.join(os.path.dirname(__file__), 'config', 'requirements.txt')
-    saved_requirements = os.path.join(os.path.dirname(__file__), 'config', 'requirements_saved.txt')
-    
-    if not os.path.exists(saved_requirements):
-        return True
-    
-    return not filecmp.cmp(current_requirements, saved_requirements, shallow=False)
-
-def save_requirements():
-    current_requirements = os.path.join(os.path.dirname(__file__), 'config', 'requirements.txt')
-    saved_requirements = os.path.join(os.path.dirname(__file__), 'config', 'requirements_saved.txt')
-    shutil.copyfile(current_requirements, saved_requirements)
 
 def main():
     # Update the repository to the latest version
-    internetConnection: bool = check_internet_connection()
-    updateSuccessful: bool = False
-    if internetConnection:
-        updateSuccessful = update_repository()
-        if updateSuccessful and requirements_changed():
-            install_requirements()
-            save_requirements()
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(current_dir, 'config', 'setup_status.json')
+    with open(config_path) as f:
+        status = json.load(f)
+    internetConnection: bool = status['internetConnection']
+    updateSuccessful: bool = status['updateSuccessful']
 
     # Create core application
     app = QApplication(sys.argv)
