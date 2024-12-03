@@ -71,30 +71,15 @@ def update_repository():
 def install_requirements():
     try:
         base_dir = os.path.dirname(os.path.dirname(__file__))
-        venv_path = os.path.join(base_dir, 'venv')
-        if not os.path.exists(venv_path):
-            subprocess.check_call([sys.executable, "-m", "venv", venv_path])
-        
-        # Get the correct paths for the current OS
-        scripts_dir = 'Scripts' if os.name == 'nt' else 'bin'
-        python_exe = 'python.exe' if os.name == 'nt' else 'python3'
-        
-        python_path = os.path.join(venv_path, scripts_dir, python_exe)
-        pip_cmd = [python_path, "-m", "pip"]
-        
-        # Check if the paths exist
-        if not os.path.exists(python_path):
-            print(f"Virtual environment not properly created at: {python_path}")
-            return False
-            
         requirements_path = os.path.join(base_dir, 'config', 'requirements.txt')
+        
         if not os.path.exists(requirements_path):
             print(f"Requirements file not found at: {requirements_path}")
             return False
 
-        # Run pip commands
-        subprocess.check_call([*pip_cmd, "install", "--upgrade", "pip"])
-        subprocess.check_call([*pip_cmd, "install", "-r", requirements_path])
+        # Install globally without virtualenv
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", requirements_path])
         print("Requirements installed")
         return True
     except subprocess.CalledProcessError as e:
