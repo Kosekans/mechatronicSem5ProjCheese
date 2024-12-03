@@ -1,0 +1,6 @@
+python3-pyqt5
+qt5-qmake
+qtbase5-dev
+qtdeclarative5-dev
+qml-module-qtquick2
+qml-module-qtquick-controls2

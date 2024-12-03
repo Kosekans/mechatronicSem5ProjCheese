@@ -6,6 +6,26 @@ import shutil
 import filecmp
 import json
 
+def install_requirementsB():
+    try:
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        system_req_path = os.path.join(base_dir, 'config', 'requirementsB.txt')
+        
+        if os.path.exists(system_req_path):
+            with open(system_req_path) as f:
+                packages = [line.strip() for line in f if line.strip()]
+            
+            # Update package list
+            subprocess.check_call(["sudo", "apt", "update"])
+            
+            # Install each package
+            for package in packages:
+                subprocess.check_call(["sudo", "apt", "install", "-y", package])
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install system requirements: {e}")
+        return False
+
 def setup():
     # Get correct config path (one level up from utils)
     base_dir = os.path.dirname(os.path.dirname(__file__))
@@ -19,6 +39,7 @@ def setup():
         if updateSuccessful and requirements_changed():
             install_requirements()
             save_requirements()
+            install_requirementsB()
             
     config_path = os.path.join(config_dir, 'setup_status.json')
     status = {
