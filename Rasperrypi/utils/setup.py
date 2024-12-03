@@ -12,20 +12,20 @@ def install_requirementsB():
         system_req_path = os.path.join(base_dir, 'config', 'requirementsB.txt')
         
         if os.path.exists(system_req_path):
+            # First update and fix any broken dependencies
+            subprocess.check_call(["sudo", "apt", "update"])
+            subprocess.check_call(["sudo", "apt", "--fix-broken", "install", "-y"])
+            
             with open(system_req_path) as f:
                 packages = [line.strip() for line in f if line.strip()]
             
-            # Force architecture for Raspberry Pi
-            subprocess.check_call(["sudo", "dpkg", "--add-architecture", "armhf"])
-            subprocess.check_call(["sudo", "apt", "update"])
+            # Install all packages in a single command
+            package_list = " ".join(packages)
+            subprocess.check_call(f"sudo apt install -y {package_list}", shell=True)
             
-            # Install each package with explicit confirmation
-            for package in packages:
-                try:
-                    subprocess.check_call(["sudo", "apt", "install", "-y", "--fix-missing", package])
-                except subprocess.CalledProcessError:
-                    print(f"Failed to install {package}, continuing...")
-                    continue
+            # Force reinstall PyQt5 via pip after system packages
+            subprocess.check_call(["sudo", "pip3", "install", "--force-reinstall", "PyQt5==5.15.0"])
+            
         print("System requirements installed")
         return True
     except Exception as e:

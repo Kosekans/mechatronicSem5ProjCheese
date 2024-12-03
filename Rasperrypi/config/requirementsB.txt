@@ -1,7 +1,7 @@
 python3-pyqt5
-python3-pyqt5.qtqml
-qt5-default
+python3-pyqt5.qml
+python3-pyqt5.qtquick
+qtbase5-dev
+qtdeclarative5-dev
 qml-module-qtquick2
 qml-module-qtquick-controls2
-qml-module-qtquick-window2
-qml-module-qtqml
