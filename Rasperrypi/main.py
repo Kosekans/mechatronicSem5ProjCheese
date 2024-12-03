@@ -4,9 +4,12 @@ from controllers import *
 from controllers.gameController import GameController
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
+import os
 import sys
 import subprocess
 import socket
+import filecmp
+import shutil
 
 def check_internet_connection():
     try:
@@ -23,12 +26,38 @@ def update_repository():
     except subprocess.CalledProcessError as e:
         return False
 
+def install_requirements():
+    try:
+        requirements_path = os.path.join(os.path.dirname(__file__), 'config', 'requirements.txt')
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", requirements_path])
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install requirements: {e}")
+        return False
+
+def requirements_changed():
+    current_requirements = os.path.join(os.path.dirname(__file__), 'config', 'requirements.txt')
+    saved_requirements = os.path.join(os.path.dirname(__file__), 'config', 'requirements_saved.txt')
+    
+    if not os.path.exists(saved_requirements):
+        return True
+    
+    return not filecmp.cmp(current_requirements, saved_requirements, shallow=False)
+
+def save_requirements():
+    current_requirements = os.path.join(os.path.dirname(__file__), 'config', 'requirements.txt')
+    saved_requirements = os.path.join(os.path.dirname(__file__), 'config', 'requirements_saved.txt')
+    shutil.copyfile(current_requirements, saved_requirements)
+
 def main():
     # Update the repository to the latest version
     internetConnection: bool = check_internet_connection()
     updateSuccessful: bool = False
     if internetConnection:
         updateSuccessful = update_repository()
+        if updateSuccessful and requirements_changed():
+            install_requirements()
+            save_requirements()
 
     # Create core application
     app = QApplication(sys.argv)

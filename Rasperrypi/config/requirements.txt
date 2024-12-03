@@ -1,0 +1,5 @@
+PyQt5>=5.15.0
+PyQt5-Qt5>=5.15.0
+PyQt5-sip>=12.8.0
+pyserial>=3.5
+RPi.GPIO>=0.7.0; sys_platform == 'linux'
