@@ -15,15 +15,39 @@ def install_requirementsB():
             with open(system_req_path) as f:
                 packages = [line.strip() for line in f if line.strip()]
             
-            # Update package list
+            # Force architecture for Raspberry Pi
+            subprocess.check_call(["sudo", "dpkg", "--add-architecture", "armhf"])
             subprocess.check_call(["sudo", "apt", "update"])
             
-            # Install each package
+            # Install each package with explicit confirmation
             for package in packages:
-                subprocess.check_call(["sudo", "apt", "install", "-y", package])
+                try:
+                    subprocess.check_call(["sudo", "apt", "install", "-y", "--fix-missing", package])
+                except subprocess.CalledProcessError:
+                    print(f"Failed to install {package}, continuing...")
+                    continue
+        print("System requirements installed")
+        return True
+    except Exception as e:
+        print(f"Failed to install system requirements: {e}")
+        return False
+
+def install_requirements():
+    try:
+        base_dir = os.path.dirname(os.path.dirname(__file__))
+        requirements_path = os.path.join(base_dir, 'config', 'requirements.txt')
+        
+        if not os.path.exists(requirements_path):
+            print(f"Requirements file not found at: {requirements_path}")
+            return False
+
+        # Install globally with sudo to ensure proper permissions
+        subprocess.check_call(["sudo", sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+        subprocess.check_call(["sudo", sys.executable, "-m", "pip", "install", "--no-cache-dir", "-r", requirements_path])
+        print("Python requirements installed")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"Failed to install system requirements: {e}")
+        print(f"Failed to install requirements: {e}")
         return False
 
 def setup():
@@ -37,9 +61,15 @@ def setup():
     if internetConnection:
         updateSuccessful = update_repository()
         if updateSuccessful and requirements_changed():
-            install_requirements()
+            # Install system packages first
+            if not install_requirementsB():
+                print("Failed to install system requirements")
+                return False
+            # Then install Python packages
+            if not install_requirements():
+                print("Failed to install Python requirements")
+                return False
             save_requirements()
-            install_requirementsB()
             
     config_path = os.path.join(config_dir, 'setup_status.json')
     status = {
@@ -66,24 +96,6 @@ def update_repository():
         return True
     except subprocess.CalledProcessError as e:
         print(f"Failed to update repository: {e}")
-        return False
-
-def install_requirements():
-    try:
-        base_dir = os.path.dirname(os.path.dirname(__file__))
-        requirements_path = os.path.join(base_dir, 'config', 'requirements.txt')
-        
-        if not os.path.exists(requirements_path):
-            print(f"Requirements file not found at: {requirements_path}")
-            return False
-
-        # Install globally without virtualenv
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", requirements_path])
-        print("Requirements installed")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to install requirements: {e}")
         return False
 
 def requirements_changed():
