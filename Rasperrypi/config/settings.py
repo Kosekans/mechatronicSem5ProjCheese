@@ -54,5 +54,7 @@ ERROR_MESSAGES = {
     'HARDWARE_INITIALIZATION_FAILED': 'Hardware initialization failed, try updating the port in settings or check the connection',
     'PORT_UPDATE_FAILED': 'Port update failed, check the connection and try again',
     'NO_PORTS_FOUND': 'No connected ports found, update the ports in settings',
+    'NO_INTERNET_CONNECTION': 'No internet connection found, could not update repository. Check the connection and retart to update',
+    'UPDATE_FAILED': 'Failed to update repository',
     'SUCCESS': 'passt scho, het klappt'
 }

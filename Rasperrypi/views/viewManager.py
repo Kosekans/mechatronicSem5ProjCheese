@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 
-from config.settings import QML_SETTINGS, GAME_SETTINGS  # Update import at top
+from config.settings import QML_SETTINGS, GAME_SETTINGS, ERROR_MESSAGES  # Update import at top
 
 class ViewManager(QObject):
     """
@@ -30,7 +30,7 @@ class ViewManager(QObject):
     gameStateUpdated = pyqtSignal('QVariant')
     initialStateLoaded = pyqtSignal()  # Add new signal
 
-    def __init__(self, app: QApplication) -> None:
+    def __init__(self, app: QApplication, internetConnection: bool, updateSuccessful: bool) -> None:
         """
         Initialize the ViewManager with a QApplication instance.
         Sets up the QML engine and initializes the page navigation stack.
@@ -39,11 +39,22 @@ class ViewManager(QObject):
             app (QApplication): The main application instance
         """
         super().__init__()
+        self.internetConnection = internetConnection
+        self.updateSuccessful = updateSuccessful
         self.app = app
         self.engine = QQmlApplicationEngine()
+        self.internetConnection = internetConnection
         self.page_stack: List[str] = ['main']  # Initialize navigation stack with main page
         self.setupPages()
         self.setupUI()
+        self.initErrorMessages()
+
+    def initErrorMessages(self):
+        if not self.internetConnection:
+            self.showWarning(ERROR_MESSAGES['NO_INTERNET_CONNECTION'])
+        elif not self.updateSuccessful:
+            self.showWarning(ERROR_MESSAGES['UPDATE_FAILED'])
+
 
     def setupPages(self) -> None:
         """
