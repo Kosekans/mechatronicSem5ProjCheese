@@ -5,7 +5,7 @@ import socket
 import json
 
 def setup():
-    base_dir = os.path.dirname(os.path.dirname(__file__))
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     config_dir = os.path.join(base_dir, 'config')
     
     internetConnection = check_internet_connection()
@@ -48,8 +48,8 @@ def update_repository():
 
 def installSystemPackages():
     try:
-        base_dir = os.path.dirname(os.path.dirname(__file__))
-        system_req_path = os.path.join(base_dir, 'config', 'requirementsA.txt')
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        system_req_path = os.path.join(base_dir, 'config', 'requirementsSystem.txt')
         
         if os.path.exists(system_req_path):
             subprocess.check_call(["sudo", "apt", "update"])
@@ -69,8 +69,8 @@ def installSystemPackages():
 
 def installPythonPackages():
     try:
-        base_dir = os.path.dirname(os.path.dirname(__file__))
-        requirements_path = os.path.join(base_dir, 'config', 'requirementsB.txt')
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        requirements_path = os.path.join(base_dir, 'config', 'requirementsPython.txt')
         
         if not os.path.exists(requirements_path):
             print(f"Python requirements file not found at: {requirements_path}")
