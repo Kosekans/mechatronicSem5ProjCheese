@@ -1,6 +1,8 @@
+python3-qt5
 python3-pyqt5
 python3-pyqt5.qml
 python3-pyqt5.qtquick
+python3-pyqt5.qtwebengine
 qtbase5-dev
 qtdeclarative5-dev
 qml-module-qtquick2
