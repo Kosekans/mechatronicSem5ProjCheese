@@ -1,0 +1,14 @@
+[Unit]
+Description=Raspberry Pi Cheese Project
+After=network.target
+
+[Service]
+Type=simple
+User=chaes
+WorkingDirectory=/home/pi/mechatronicSem5ProjCheese/raspberryPi
+ExecStart=/bin/bash -c 'python3 utils/setup.py && python3 main.py'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
