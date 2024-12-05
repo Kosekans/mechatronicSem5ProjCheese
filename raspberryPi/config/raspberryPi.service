@@ -5,7 +5,12 @@ After=network.target
 [Service]
 Type=simple
 User=chaes
-WorkingDirectory=/home/pi/mechatronicSem5ProjCheese/raspberryPi
+Group=chaes
+WorkingDirectory=/home/chaes/mechatronicSem5ProjCheese/raspberryPi
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/chaes/.Xauthority
+StandardOutput=append:/var/log/cheese.log
+StandardError=append:/var/log/cheese.error.log
 ExecStart=/bin/bash -c 'python3 utils/setup.py && [ $? -eq 0 ] && python3 main.py'
 Restart=on-failure
 RestartSec=5
