@@ -16,15 +16,22 @@ from pathlib import Path
 def setup_platform_display():
     """Configure display settings based on platform"""
     if HelperFunctions.is_raspberry_pi():
-        # Raspberry Pi settings
+        # Set base display configuration
+        os.environ['DISPLAY'] = ':0'
         os.environ['QT_QPA_PLATFORM'] = 'eglfs'
+        
+        # Set EGLFS specific configuration
+        os.environ['QT_QPA_EGLFS_DEVICE'] = '/dev/dri/card0'  # Add device path
         os.environ['QT_QPA_EGLFS_INTEGRATION'] = 'eglfs_kms'
         os.environ['QT_QPA_EGLFS_KMS_ATOMIC'] = '1'
         os.environ['QT_QPA_EGLFS_KMS_CONFIG'] = '/etc/kms.conf'
         os.environ['QT_QPA_EGLFS_ALWAYS_SET_MODE'] = '1'
         os.environ['QT_QPA_EGLFS_PHYSICAL_WIDTH'] = '800'
         os.environ['QT_QPA_EGLFS_PHYSICAL_HEIGHT'] = '480'
+        
+        # Set debugging
         os.environ['QT_LOGGING_RULES'] = '*.debug=true;qt.qpa.*=true'
+        os.environ['QT_DEBUG_PLUGINS'] = '1'
         print("Raspberry Pi display configured")
     else:
         os.environ['QT_QPA_PLATFORM'] = 'windows'
@@ -34,14 +41,18 @@ def check_display():
     try:
         setup_platform_display()
         if HelperFunctions.is_raspberry_pi():
-            if not os.path.exists(os.environ.get('QT_QPA_EGLFS_DEVICE')):
-                print(f"DRM device not found: {os.environ.get('QT_QPA_EGLFS_DEVICE')}") 
-                logging.error(f"DRM device not found: {os.environ.get('QT_QPA_EGLFS_DEVICE')}")
+            device_path = os.environ.get('QT_QPA_EGLFS_DEVICE')
+            if not device_path:
+                print("QT_QPA_EGLFS_DEVICE not set")
                 return False
+            if not os.path.exists(device_path):
+                print(f"DRM device not found: {device_path}")
+                return False
+            print(f"Using display device: {device_path}")
         return True
     except Exception as e:
-        print(f"Display initialization failed: {e}")
-        logging.error(f"Display initialization failed: {e}")
+        print(f"Display initialization failed: {str(e)}")
+        logging.error(f"Display initialization failed: {str(e)}", exc_info=True)
         return False
 
 def get_log_path():
