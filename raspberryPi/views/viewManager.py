@@ -1,15 +1,18 @@
 import os
 import sys
 from pathlib import Path
+
+# Add parent directory to system path to enable imports from parent modules
+current_dir = Path(__file__).parent
+parent_dir = str(current_dir.parent)
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+
 from typing import List
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from config.settings import QML_SETTINGS, GAME_SETTINGS, ERROR_MESSAGES  # Update import at top
-
-# Add parent directory to system path to enable imports from parent modules
-current_dir = Path(__file__).parent
-sys.path.append(str(current_dir.parent))
 
 
 class ViewManager(QObject):

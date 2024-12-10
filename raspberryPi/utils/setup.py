@@ -48,18 +48,21 @@ def update_repository():
 
 def installSystemPackages():
     try:
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        base_dir = os.path.dirname(os.path.dirname(__file__))
         system_req_path = os.path.join(base_dir, 'config', 'requirementsSystem.txt')
         
-        if os.path.exists(system_req_path):
-            subprocess.check_call(["sudo", "apt", "update"])
-            subprocess.check_call(["sudo", "apt", "--fix-broken", "install", "-y"])
-            
-            with open(system_req_path) as f:
-                packages = [line.strip() for line in f if line.strip()]
-            
-            package_list = " ".join(packages)
-            subprocess.check_call(f"sudo apt install -y {package_list}", shell=True)
+        if not os.path.exists(system_req_path):
+            print(f"System requirements file not found at: {system_req_path}")
+            return False
+    
+        subprocess.check_call(["sudo", "apt", "update"])
+        subprocess.check_call(["sudo", "apt", "--fix-broken", "install", "-y"])
+        
+        with open(system_req_path) as f:
+            packages = [line.strip() for line in f if line.strip()]
+        
+        package_list = " ".join(packages)
+        subprocess.check_call(f"sudo apt install -y {package_list}", shell=True)
             
         print("System packages installed successfully")
         return True
@@ -69,7 +72,7 @@ def installSystemPackages():
 
 def installPythonPackages():
     try:
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        base_dir = os.path.dirname(os.path.dirname(__file__))
         requirements_path = os.path.join(base_dir, 'config', 'requirementsPython.txt')
         
         if not os.path.exists(requirements_path):
