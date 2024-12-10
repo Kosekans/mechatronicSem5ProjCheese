@@ -1,7 +1,7 @@
 [Unit]
 Description=Raspberry Pi Cheese Project
-After=graphical.target
-Wants=graphical.target
+After=getty.target
+Wants=getty.target
 
 [Service]
 Type=simple
@@ -10,27 +10,23 @@ Group=chaes
 WorkingDirectory=/home/chaes/mechatronicSem5ProjCheese/raspberryPi
 
 # Environment variables
-Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/chaes/.Xauthority
 Environment=QT_QPA_PLATFORM=eglfs
 Environment=QT_QPA_EGLFS_DEVICE=/dev/dri/card0
+Environment=QT_QPA_EGLFS_KMS_CONFIG=/etc/kms.conf
 Environment=QT_QPA_EGLFS_KMS_ATOMIC=1
 Environment=QT_QPA_EGLFS_ALWAYS_SET_MODE=1
-Environment=XDG_RUNTIME_DIR=/run/user/1000
 Environment=QT_DEBUG_PLUGINS=1
 
 # Logging
 StandardOutput=append:/var/log/cheese.log
 StandardError=append:/var/log/cheese.error.log
 
-# Setup and execution
-ExecStartPre=/bin/sh -c 'mkdir -p /run/user/1000 && chown chaes:chaes /run/user/1000'
-ExecStartPre=/bin/sh -c 'chmod g+rw /dev/dri/*'
+# Setup
+ExecStartPre=/bin/sh -c 'chmod g+rw /dev/dri/* && chown -R chaes:chaes /dev/dri/*'
 ExecStart=/usr/bin/python3 main.py
 
-# Restart configuration
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=graphical.target
+WantedBy=multi-user.target
