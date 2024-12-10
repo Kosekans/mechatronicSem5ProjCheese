@@ -16,7 +16,6 @@ from pathlib import Path
 def setup_platform_display():
     """Configure display settings based on platform"""
     if HelperFunctions.is_raspberry_pi():
-        print("Raspberry Pi detected")
         # Raspberry Pi settings
         os.environ['QT_QPA_PLATFORM'] = 'eglfs'
         os.environ['QT_QPA_EGLFS_INTEGRATION'] = 'eglfs_kms'
@@ -26,6 +25,7 @@ def setup_platform_display():
         os.environ['QT_QPA_EGLFS_PHYSICAL_WIDTH'] = '800'
         os.environ['QT_QPA_EGLFS_PHYSICAL_HEIGHT'] = '480'
         os.environ['QT_LOGGING_RULES'] = '*.debug=true;qt.qpa.*=true'
+        print("Raspberry Pi display configured")
     else:
         os.environ['QT_QPA_PLATFORM'] = 'windows'
 
@@ -34,12 +34,13 @@ def check_display():
     try:
         setup_platform_display()
         if HelperFunctions.is_raspberry_pi():
-            print("Checking display")
             if not os.path.exists(os.environ.get('QT_QPA_EGLFS_DEVICE')):
+                print(f"DRM device not found: {os.environ.get('QT_QPA_EGLFS_DEVICE')}") 
                 logging.error(f"DRM device not found: {os.environ.get('QT_QPA_EGLFS_DEVICE')}")
                 return False
         return True
     except Exception as e:
+        print(f"Display initialization failed: {e}")
         logging.error(f"Display initialization failed: {e}")
         return False
 
