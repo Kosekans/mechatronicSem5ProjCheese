@@ -3,22 +3,24 @@ import os
 import sys
 from pathlib import Path
 
-# Add parent directory to system path
-current_dir = Path(__file__).parent
-parent_dir = str(current_dir.parent)
-sys.path.append(parent_dir)
-
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 import platform
 
+# Get the current file's directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Add the parent directory to the system path
+parent_dir = os.path.join(current_dir, '..')
+sys.path.append(parent_dir)
+
 from config.settings import RASPBERRY_PI_SETTINGS
 from utils.gpioMock import GPIOMock
+from utils.helperFunctions import HelperFunctions
 
 # Check if running on Raspberry Pi to determine which GPIO implementation to use
-isRasperrypi: bool = platform.system() == "Linux" and os.uname().nodename == RASPBERRY_PI_SETTINGS['OS_USERNAME']
+isRaspberryPi = HelperFunctions.is_raspberry_pi()  # type: bool
 
 # Import real GPIO on Pi, mock on other systems
-if isRasperrypi:
+if isRaspberryPi:
     import RPi.GPIO as GPIO
 else:
     GPIO = GPIOMock()
@@ -47,7 +49,7 @@ class InputController(QObject):
         Initialize GPIO settings and pin modes.
         Only performs actual hardware setup on Raspberry Pi.
         """
-        if not isRasperrypi:
+        if not isRaspberryPi:
             return
             
         try:

@@ -1,6 +1,6 @@
 [Unit]
 Description=Raspberry Pi Cheese Project
-After=network.target
+After=multi-user.target
 
 [Service]
 Type=simple
@@ -8,12 +8,17 @@ User=chaes
 Group=chaes
 WorkingDirectory=/home/chaes/mechatronicSem5ProjCheese/raspberryPi
 Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/chaes/.Xauthority
+Environment=QT_QPA_PLATFORM=eglfs
+Environment=QT_QPA_EGLFS_KMS_ATOMIC=1
+Environment=QT_QPA_EGLFS_ALWAYS_SET_MODE=1
+Environment=QT_DEBUG_PLUGINS=1
+Environment=XDG_RUNTIME_DIR=/run/user/1000
 StandardOutput=append:/var/log/cheese.log
 StandardError=append:/var/log/cheese.error.log
-ExecStart=/bin/bash -c 'python3 utils/setup.py && [ $? -eq 0 ] && python3 main.py'
+ExecStartPre=/bin/sh -c 'chown -R chaes:chaes /dev/dri/*'
+ExecStart=/usr/bin/python3 main.py
 Restart=on-failure
 RestartSec=5
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.targetc
