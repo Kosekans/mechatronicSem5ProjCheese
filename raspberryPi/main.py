@@ -16,6 +16,7 @@ from pathlib import Path
 def setup_platform_display():
     """Configure display settings based on platform"""
     if HelperFunctions.is_raspberry_pi():
+        print("Raspberry Pi detected")
         # Raspberry Pi settings
         os.environ['QT_QPA_PLATFORM'] = 'eglfs'
         os.environ['QT_QPA_EGLFS_INTEGRATION'] = 'eglfs_kms'
