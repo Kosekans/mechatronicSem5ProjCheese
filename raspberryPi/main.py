@@ -18,10 +18,11 @@ def setup_platform_display():
     if HelperFunctions.is_raspberry_pi():
         # Raspberry Pi settings
         os.environ['QT_QPA_PLATFORM'] = 'eglfs'
-        os.environ['QT_QPA_EGLFS_DEVICE'] = '/dev/dri/card1'  # Use GPU card
+        os.environ['QT_QPA_EGLFS_DEVICE'] = '/dev/dri/card0'  # Changed to card0
         os.environ['QT_QPA_EGLFS_KMS_ATOMIC'] = '1'
         os.environ['QT_QPA_EGLFS_ALWAYS_SET_MODE'] = '1'
-        os.environ['XDG_RUNTIME_DIR'] = '/run/user/1000'
+        os.environ['QT_QPA_EGLFS_PHYSICAL_WIDTH'] = '800'   # DSI display width
+        os.environ['QT_QPA_EGLFS_PHYSICAL_HEIGHT'] = '480'  # DSI display height
         os.environ['QT_LOGGING_RULES'] = '*.debug=true;qt.qpa.*=true'
     else:
         # Windows settings
