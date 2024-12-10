@@ -34,6 +34,7 @@ def check_display():
     try:
         setup_platform_display()
         if HelperFunctions.is_raspberry_pi():
+            print("Checking display")
             if not os.path.exists(os.environ.get('QT_QPA_EGLFS_DEVICE')):
                 logging.error(f"DRM device not found: {os.environ.get('QT_QPA_EGLFS_DEVICE')}")
                 return False
@@ -45,6 +46,7 @@ def check_display():
 def get_log_path():
     """Get platform-specific log path"""
     if HelperFunctions.is_raspberry_pi():
+        print("getting Raspberry Pi log path")
         return '/var/log/cheese.log'
     else:
         return str(Path.home() / 'cheese.log')
@@ -57,21 +59,26 @@ def main():
             format='%(asctime)s - %(levelname)s - %(message)s',
             filename=get_log_path()
         )
+        print("Logging configured")
 
         if not check_display():
             logging.error("Display not available")
             return 1
+        print("Display available")
 
         # Enable Qt debugging
         os.environ['QT_DEBUG_PLUGINS'] = '1'
+        print("Qt debugging enabled")
         
         # Create application
         app = QApplication(sys.argv)
+        print("Application created")
         
         # Default values for development
         internetConnection = True 
         updateSuccessful = True
 
+        '''
         if HelperFunctions.is_raspberry_pi():
             # Load real status on Pi
             try:
@@ -84,6 +91,7 @@ def main():
                         updateSuccessful = status['updateSuccessful']
             except Exception as e:
                 logging.warning(f"Could not load setup status: {e}")
+        '''
 
         # Initialize components
         gameState = GameState()
@@ -91,6 +99,7 @@ def main():
         viewManager = ViewManager(app, internetConnection, updateSuccessful)
         inputController = InputController()
         gameController = GameController(gameState, viewManager, arduinoController, inputController)
+        print("Initialized components")
 
         # Configure window
         for widget in app.topLevelWidgets():
@@ -100,13 +109,17 @@ def main():
                     Qt.FramelessWindowHint |
                     Qt.WindowStaysOnTopHint
                 )
+                print("Setting window to fullscreen")
                 widget.showFullScreen()
+                print("Window set to fullscreen")
             else:
                 widget.show()
 
         # Connect signals
         viewManager.connectSignals(gameController)
+        print("Connected signals to viewManager")
         inputController.connectSignals(gameController)
+        print("Connected signals to inputController")
 
         return app.exec_()
 
