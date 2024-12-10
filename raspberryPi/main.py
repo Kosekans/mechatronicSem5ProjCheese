@@ -17,37 +17,35 @@ def setup_platform_display():
     """Configure display settings based on platform"""
     if HelperFunctions.is_raspberry_pi():
         # Raspberry Pi settings
-        os.environ['DISPLAY'] = ':0'
         os.environ['QT_QPA_PLATFORM'] = 'eglfs'
+        os.environ['QT_QPA_EGLFS_DEVICE'] = '/dev/dri/card1'  # Use GPU card
         os.environ['QT_QPA_EGLFS_KMS_ATOMIC'] = '1'
         os.environ['QT_QPA_EGLFS_ALWAYS_SET_MODE'] = '1'
         os.environ['XDG_RUNTIME_DIR'] = '/run/user/1000'
+        os.environ['QT_LOGGING_RULES'] = '*.debug=true;qt.qpa.*=true'
     else:
         # Windows settings
         os.environ['QT_QPA_PLATFORM'] = 'windows'
-        
-def get_log_path():
-    """Get platform-specific log path"""
-    if HelperFunctions.is_raspberry_pi():
-        return '/var/log/cheese.log'
-    else:
-        return str(Path.home() / 'cheese.log')
 
 def check_display():
     """Check if display is available"""
     try:
         setup_platform_display()
         if HelperFunctions.is_raspberry_pi():
-            # Check if we can connect to X server
-            from subprocess import check_call, DEVNULL
-            try:
-                check_call(['xset', 'q'], stdout=DEVNULL, stderr=DEVNULL)
-            except:
-                logging.warning("X server not running, using EGLFS")
+            if not os.path.exists(os.environ.get('QT_QPA_EGLFS_DEVICE')):
+                logging.error(f"DRM device not found: {os.environ.get('QT_QPA_EGLFS_DEVICE')}")
+                return False
         return True
     except Exception as e:
         logging.error(f"Display initialization failed: {e}")
         return False
+
+def get_log_path():
+    """Get platform-specific log path"""
+    if HelperFunctions.is_raspberry_pi():
+        return '/var/log/cheese.log'
+    else:
+        return str(Path.home() / 'cheese.log')
 
 def main():
     try:
