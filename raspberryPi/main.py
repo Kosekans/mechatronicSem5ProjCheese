@@ -32,6 +32,10 @@ def setup_platform_display():
         # Set debugging
         os.environ['QT_LOGGING_RULES'] = '*.debug=true;qt.qpa.*=true'
         os.environ['QT_DEBUG_PLUGINS'] = '1'
+
+        # QML paths
+        os.environ['QML_IMPORT_PATH'] = '/usr/lib/aarch64-linux-gnu/qt5/qml'
+        os.environ['QML2_IMPORT_PATH'] = '/usr/lib/aarch64-linux-gnu/qt5/qml'
         print("Raspberry Pi display configured")
     else:
         os.environ['QT_QPA_PLATFORM'] = 'windows'
