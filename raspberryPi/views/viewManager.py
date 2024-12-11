@@ -28,9 +28,8 @@ class ViewManager(QObject):
     checkboxChanged = pyqtSignal(str, bool)  # Emitted when checkbox state changes
     sliderChanged = pyqtSignal(str, float)   # Emitted when slider value changes
     gameModeChanged = pyqtSignal(str)        # Emitted when game mode changes
-    # Add new signal for state updates
     gameStateUpdated = pyqtSignal('QVariant')
-    initialStateLoaded = pyqtSignal()  # Add new signal
+    initialStateLoaded = pyqtSignal()
 
     def __init__(self, app: QApplication, internetConnection: bool, updateSuccessful: bool) -> None:
         """
@@ -45,7 +44,6 @@ class ViewManager(QObject):
         self.updateSuccessful = updateSuccessful
         self.app = app
         self.engine = QQmlApplicationEngine()
-        self.internetConnection = internetConnection
         self.page_stack: List[str] = ['main']  # Initialize navigation stack with main page
         self.setupPages()
         self.setupUI()

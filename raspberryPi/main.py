@@ -134,6 +134,7 @@ def main():
         # Connect signals
         viewManager.connectSignals(gameController)
         print("Connected signals to viewManager")
+        #may be stupid
         inputController.connectSignals(gameController)
         print("Connected signals to inputController")
 
