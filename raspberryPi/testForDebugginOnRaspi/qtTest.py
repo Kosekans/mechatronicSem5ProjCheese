@@ -9,6 +9,8 @@ os.environ["QT_QPA_EGLFS_ALWAYS_SET_MODE"] = "1"
 os.environ["QT_QPA_EGLFS_KMS_CONFIG"] = "/etc/qt5/eglfs_kms.json"
 os.environ["QT_LOGGING_RULES"] = "qt.qpa.*=true"  # Enable debug logging
 os.environ["XDG_RUNTIME_DIR"] = "/run/user/{}".format(os.getuid())
+os.environ["QT_QPA_EGLFS_INTEGRATION"] = "eglfs_kms"
+os.environ["QT_QPA_EGLFS_FORCE888"] = "1"
 
 from PyQt5.QtGui import QGuiApplication, QWindow
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
@@ -89,6 +91,9 @@ class ViewManager(QObject):
     
 if __name__ == "__main__":
     try:
+        # Add user to required groups if not already
+        os.system('sudo usermod -a -G video,input $USER')
+        
         # Run as current user, not root
         if os.geteuid() == 0:  # If running as root
             user_uid = int(os.environ.get('SUDO_UID', 1000))
