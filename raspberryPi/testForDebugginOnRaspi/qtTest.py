@@ -8,8 +8,9 @@ os.environ["QT_QPA_PLATFORM"] = "eglfs"
 os.environ["QT_QPA_EGLFS_ALWAYS_SET_MODE"] = "1"
 os.environ["QT_QPA_EGLFS_KMS_CONFIG"] = "/etc/qt5/eglfs_kms.json"
 os.environ["QT_LOGGING_RULES"] = "qt.qpa.*=true"  # Enable debug logging
+os.environ["XDG_RUNTIME_DIR"] = "/run/user/{}".format(os.getuid())
 
-from PyQt5.QtGui import QGuiApplication
+from PyQt5.QtGui import QGuiApplication, QWindow
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, Qt, QCoreApplication, pyqtSlot
@@ -88,6 +89,13 @@ class ViewManager(QObject):
     
 if __name__ == "__main__":
     try:
+        # Run as current user, not root
+        if os.geteuid() == 0:  # If running as root
+            user_uid = int(os.environ.get('SUDO_UID', 1000))
+            user_gid = int(os.environ.get('SUDO_GID', 1000))
+            os.setegid(user_gid)
+            os.seteuid(user_uid)
+            
         app = QGuiApplication(sys.argv)  # Use QGuiApplication instead of QApplication
         print("QApplication created")
         viewManager = ViewManager(app, True, True)
