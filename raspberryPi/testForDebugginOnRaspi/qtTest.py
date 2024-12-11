@@ -6,12 +6,14 @@ from typing import List
 # Set required environment variables
 os.environ["QT_QPA_PLATFORM"] = "eglfs"
 os.environ["QT_QPA_EGLFS_ALWAYS_SET_MODE"] = "1"
+os.environ["QT_QPA_EGLFS_KMS_CONFIG"] = "/etc/qt5/eglfs_kms.json"
+os.environ["QT_LOGGING_RULES"] = "qt.qpa.*=true"  # Enable debug logging
 
 from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, Qt, QCoreApplication, pyqtSlot
-print("imported qt schiisdräck")
+print("imported all required modules")
 
 class ViewManager(QObject):
     buttonClicked = pyqtSignal(str)
@@ -86,26 +88,18 @@ class ViewManager(QObject):
     
 if __name__ == "__main__":
     try:
-        # Configure EGLFS settings
-        os.environ["QT_QPA_EGLFS_WIDTH"] = "800"
-        os.environ["QT_QPA_EGLFS_HEIGHT"] = "480"
-        os.environ["QT_QPA_EGLFS_PHYSICAL_WIDTH"] = "155"  # Display width in mm
-        os.environ["QT_QPA_EGLFS_PHYSICAL_HEIGHT"] = "86"  # Display height in mm
-
-        app = QApplication(sys.argv)
-        app.setOverrideCursor(Qt.BlankCursor)  # Hide cursor for touch interface
+        app = QGuiApplication(sys.argv)  # Use QGuiApplication instead of QApplication
         print("QApplication created")
         viewManager = ViewManager(app, True, True)
         print("viewManager created")
-        for widget in app.topLevelWidgets():
-            widget.setWindowFlags(
-                Qt.Window |
-                Qt.FramelessWindowHint |
-                Qt.WindowStaysOnTopHint
-            )
-            print("Setting window to fullscreen")
-            widget.showFullScreen()
-            print("Window set to fullscreen")
+        
+        if not app.primaryScreen():
+            raise RuntimeError("No screen detected!")
+            
+        root = viewManager.engine.rootObjects()[0]
+        if root:
+            root.setProperty("visibility", QWindow.FullScreen)
+            
         app.exec_()
     except Exception as e:
         print(f"Application failed: {e}")
