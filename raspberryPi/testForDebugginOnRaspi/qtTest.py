@@ -3,6 +3,10 @@ import sys
 from pathlib import Path
 from typing import List
 
+# Set required environment variables
+os.environ["QT_QPA_PLATFORM"] = "eglfs"
+os.environ["QT_QPA_EGLFS_ALWAYS_SET_MODE"] = "1"
+
 from PyQt5.QtGui import QGuiApplication
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
@@ -82,7 +86,14 @@ class ViewManager(QObject):
     
 if __name__ == "__main__":
     try:
+        # Configure EGLFS settings
+        os.environ["QT_QPA_EGLFS_WIDTH"] = "800"
+        os.environ["QT_QPA_EGLFS_HEIGHT"] = "480"
+        os.environ["QT_QPA_EGLFS_PHYSICAL_WIDTH"] = "155"  # Display width in mm
+        os.environ["QT_QPA_EGLFS_PHYSICAL_HEIGHT"] = "86"  # Display height in mm
+
         app = QApplication(sys.argv)
+        app.setOverrideCursor(Qt.BlankCursor)  # Hide cursor for touch interface
         print("QApplication created")
         viewManager = ViewManager(app, True, True)
         print("viewManager created")
