@@ -3,19 +3,10 @@ import sys
 from pathlib import Path
 from typing import List
 
-# Set required environment variables
-os.environ["QT_QPA_PLATFORM"] = "eglfs"
-os.environ["QT_QPA_EGLFS_ALWAYS_SET_MODE"] = "1"
-os.environ["QT_QPA_EGLFS_KMS_CONFIG"] = "/etc/qt5/eglfs_kms.json"
-os.environ["QT_LOGGING_RULES"] = "qt.qpa.*=true"  # Enable debug logging
-os.environ["XDG_RUNTIME_DIR"] = "/run/user/{}".format(os.getuid())
-os.environ["QT_QPA_EGLFS_INTEGRATION"] = "eglfs_kms"
-os.environ["QT_QPA_EGLFS_FORCE888"] = "1"
-
-from PyQt5.QtGui import QGuiApplication, QWindow
-from PyQt5.QtWidgets import QApplication, QDesktopWidget
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, Qt, QCoreApplication, pyqtSlot
+from PyQt5.QtGui import QWindow  # Add this import
 print("imported all required modules")
 
 class ViewManager(QObject):
@@ -57,7 +48,7 @@ class ViewManager(QObject):
 
     def setupUI(self) -> None:
         self.engine.rootContext().setContextProperty("viewManager", self)
-        screen = QDesktopWidget().screenGeometry()
+        screen = self.app.primaryScreen().geometry()
         self.engine.rootContext().setContextProperty("windowWidth", screen.width())
         self.engine.rootContext().setContextProperty("windowHeight", screen.height())
         self.engine.rootContext().setContextProperty("windowTitle", "chüe")
@@ -90,18 +81,8 @@ class ViewManager(QObject):
                 self.initialStateLoaded.emit()
     
 if __name__ == "__main__":
-    try:
-        # Add user to required groups if not already
-        os.system('sudo usermod -a -G video,input $USER')
-        
-        # Run as current user, not root
-        if os.geteuid() == 0:  # If running as root
-            user_uid = int(os.environ.get('SUDO_UID', 1000))
-            user_gid = int(os.environ.get('SUDO_GID', 1000))
-            os.setegid(user_gid)
-            os.seteuid(user_uid)
-            
-        app = QGuiApplication(sys.argv)  # Use QGuiApplication instead of QApplication
+    try:            
+        app = QApplication(sys.argv)
         print("QApplication created")
         viewManager = ViewManager(app, True, True)
         print("viewManager created")
