@@ -34,6 +34,7 @@ class GameController(QObject):
             self.gameState.portsFound = True
             if self.arduinoController.initializeHardware():
                 self.gameState.hardwareInitialized = True
+
     
     def setupGame(self):
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['follow']:

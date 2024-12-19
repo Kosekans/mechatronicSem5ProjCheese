@@ -22,6 +22,10 @@ class ArduinoController:
             antriebPortUpdated = self.arduinoAntrieb.updatePortSettings()
             zielsystemPortUpdated = self.arduinoZielsystem.updatePortSettings()
             self.connected = antriebPortUpdated and zielsystemPortUpdated
+            if antriebPortUpdated:
+                print("found Arduino chaesAntrieb port")
+            if zielsystemPortUpdated:
+                print("found Arduino chaesZielsystem port")
             return self.connected
         except Exception as e:
             print(f"Error updating ports: {e}")
@@ -35,6 +39,10 @@ class ArduinoController:
             arduinoAntriebConnected = self.arduinoAntrieb.connect()
             arduinoZielsystemConnected = self.arduinoZielsystem.connect()
             self.connected = arduinoAntriebConnected and arduinoZielsystemConnected
+            if arduinoAntriebConnected:
+                print("connected Arduino chaesAntrieb")
+            if arduinoZielsystemConnected:
+                print("connected Arduino chaesZielsystem")
             return self.connected
         except Exception as e:
             print(f"Error initializing hardware: {e}")

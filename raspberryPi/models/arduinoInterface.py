@@ -39,12 +39,15 @@ class ArduinoInterface:
         return data
     
     def updatePortSettings(self):
+        print("looking for Arduino: ", self.id)
         connectedPorts = SerialCommunication.findConnectedPorts(
             self.baudRate,
             self.timeout,
             self.bytesize
         )
+        print("connected ports:", ", ".join(connectedPorts))
         for port in connectedPorts:
+            print("testing port", port)
             answer: str = SerialCommunication.testComunication(
                 port,
                 self.baudRate,
@@ -53,7 +56,9 @@ class ArduinoInterface:
                 self.characterEncoding,
                 'ID\n'
             )
+            print("serial test connection answer: ", answer)
             if answer == self.id:
                 self.port = port
                 return True
+        print(self.id, "Arduino not found")
         return False

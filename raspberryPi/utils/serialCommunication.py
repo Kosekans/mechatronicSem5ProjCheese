@@ -1,5 +1,6 @@
 import serial
 import serial.tools.list_ports
+import time
 
 class SerialCommunication:
     @staticmethod
@@ -19,7 +20,9 @@ class SerialCommunication:
                     # Test connection
                     testConnection = serial.Serial(port.device, baudRate, timeout=timeout, bytesize=bytesize)
                     testConnection.close()
-                    connectedPorts.append(port.device)
+                     # Only add ports that are actually USB devices
+                    if port.vid is not None:  # Check if vendor ID exists
+                        connectedPorts.append(port.device)
                 except serial.SerialException:
                     continue
             return connectedPorts
@@ -29,18 +32,26 @@ class SerialCommunication:
         testConnection = None
         try:
             testConnection = serial.Serial(port, baudRate, timeout=timeout, bytesize=bytesize)
-            # Add small delay for Arduino to reset
-            import time
-            time.sleep(2)
-            
-            testConnection.write(bytes(message + '\n', characterEncoding))
-            testConnection.flush()
-            answer = testConnection.readline()
-            if not answer:  # If no response received before timeout
-                return "No response"
-            return answer.decode(characterEncoding).strip()
+            if testConnection:
+                print("created serial test connection succsesfully")
+                # Add small delay for Arduino to reset
+                time.sleep(0.5)
+                testConnection.write(bytes(message + '\n', characterEncoding))
+                print("write done")
+                testConnection.flush()
+                print("flush done")
+                testConnection.timeout = 0.5
+                answer = testConnection.readline()
+                print("read done")
+                if not answer:  # If no response received before timeout
+                    return "no response"
+                return answer.decode(characterEncoding).strip()
+            else:
+                return "could not create serial test connection"
         except serial.SerialException as e:
+            print(f"Communication Error: {str(e)}")
             return f"Communication Error: {str(e)}"
         finally:
             if testConnection:
                 testConnection.close()
+                print("closed serial test connection")

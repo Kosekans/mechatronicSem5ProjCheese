@@ -5,93 +5,20 @@ from utils.helperFunctions import HelperFunctions
 from controllers import *
 from controllers.gameController import GameController
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt, QCoreApplication
-from PyQt5.QtGui import QGuiApplication
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QWindow
 import sys
 import os
-import logging
-import platform
 from pathlib import Path
-
-def setup_platform_display():
-    """Configure display settings based on platform"""
-    if HelperFunctions.is_raspberry_pi():
-        # Set base display configuration
-        os.environ['DISPLAY'] = ':0'
-        os.environ['QT_QPA_PLATFORM'] = 'eglfs'
-        
-        # Set EGLFS specific configuration
-        os.environ['QT_QPA_EGLFS_DEVICE'] = '/dev/dri/card0'  # Add device path
-        os.environ['QT_QPA_EGLFS_INTEGRATION'] = 'eglfs_kms'
-        os.environ['QT_QPA_EGLFS_KMS_ATOMIC'] = '1'
-        os.environ['QT_QPA_EGLFS_KMS_CONFIG'] = '/etc/kms.conf'
-        os.environ['QT_QPA_EGLFS_ALWAYS_SET_MODE'] = '1'
-        os.environ['QT_QPA_EGLFS_PHYSICAL_WIDTH'] = '800'
-        os.environ['QT_QPA_EGLFS_PHYSICAL_HEIGHT'] = '480'
-        
-        # Set debugging
-        os.environ['QT_LOGGING_RULES'] = '*.debug=true;qt.qpa.*=true'
-        os.environ['QT_DEBUG_PLUGINS'] = '1'
-
-        # QML paths
-        os.environ['QML_IMPORT_PATH'] = '/usr/lib/aarch64-linux-gnu/qt5/qml'
-        os.environ['QML2_IMPORT_PATH'] = '/usr/lib/aarch64-linux-gnu/qt5/qml'
-        print("Raspberry Pi display configured")
-    else:
-        os.environ['QT_QPA_PLATFORM'] = 'windows'
-
-def check_display():
-    """Check if display is available"""
-    try:
-        setup_platform_display()
-        if HelperFunctions.is_raspberry_pi():
-            device_path = os.environ.get('QT_QPA_EGLFS_DEVICE')
-            if not device_path:
-                print("QT_QPA_EGLFS_DEVICE not set")
-                return False
-            if not os.path.exists(device_path):
-                print(f"DRM device not found: {device_path}")
-                return False
-            print(f"Using display device: {device_path}")
-        return True
-    except Exception as e:
-        print(f"Display initialization failed: {str(e)}")
-        logging.error(f"Display initialization failed: {str(e)}", exc_info=True)
-        return False
-
-def get_log_path():
-    """Get platform-specific log path"""
-    if HelperFunctions.is_raspberry_pi():
-        print("getting Raspberry Pi log path")
-        return '/var/log/cheese.log'
-    else:
-        return str(Path.home() / 'cheese.log')
 
 def main():
     try:
-        # Setup logging
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            filename=get_log_path()
-        )
-        print("Logging configured")
-
-        if not check_display():
-            logging.error("Display not available")
-            return 1
-        print("Display available")
-
-        # Enable Qt debugging
-        os.environ['QT_DEBUG_PLUGINS'] = '1'
-        print("Qt debugging enabled")
-        
-        # Create application
+        # Create core application
         app = QApplication(sys.argv)
-        print("Application created")
-        
+        print("craeted QApplication")
+                
         # Default values for development
-        internetConnection = True 
+        internetConnection = True
         updateSuccessful = True
 
         '''
@@ -111,13 +38,47 @@ def main():
 
         # Initialize components
         gameState = GameState()
+        print("initialized component GameState")
         arduinoController = ArduinoController()
+        print("initialized component ArduinoController")
         viewManager = ViewManager(app, internetConnection, updateSuccessful)
+        print("initialized component ViewManager")
         inputController = InputController()
+        print("initialized component InputController")
         gameController = GameController(gameState, viewManager, arduinoController, inputController)
-        print("Initialized components")
+        print("initialized component GameController")
 
-        # Configure window
+        # Force fullscreen and disable window controls
+        for widget in app.topLevelWidgets():
+            widget.setWindowFlags(
+                Qt.Window |
+                Qt.FramelessWindowHint |
+                Qt.WindowStaysOnTopHint
+            )
+            widget.showFullScreen()
+            
+            # Prevent Alt+F4
+            widget.closeEvent = lambda event: event.ignore()
+
+        # Connect signals/slots after all components exist
+        viewManager.connectSignals(gameController)
+        print("connected viewManager signals to gameController")
+        inputController.connectSignals(gameController)
+        print("connected inputController signals to gameController")
+        
+        # Start application
+        sys.exit(app.exec_())
+        print("started application")
+
+        #old
+        '''
+        root = viewManager.engine.rootObjects()[0]
+        if root:
+            root.setProperty("visibility", QWindow.FullScreen)
+        '''
+
+        # old
+        '''
         for widget in app.topLevelWidgets():
             if HelperFunctions.is_raspberry_pi():
                 widget.setWindowFlags(
@@ -130,19 +91,10 @@ def main():
                 print("Window set to fullscreen")
             else:
                 widget.show()
-
-        # Connect signals
-        viewManager.connectSignals(gameController)
-        print("Connected signals to viewManager")
-        #may be stupid
-        inputController.connectSignals(gameController)
-        print("Connected signals to inputController")
-
-        return app.exec_()
-
+        '''
     except Exception as e:
-        logging.error(f"Application failed: {e}")
+        print.error(f"Application failed: {e}")
         return 1
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
