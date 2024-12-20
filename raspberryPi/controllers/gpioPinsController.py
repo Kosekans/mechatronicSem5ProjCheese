@@ -25,7 +25,7 @@ if isRaspberryPi:
 else:
     GPIO = GPIOMock()
 
-class InputController(QObject):
+class GpioPinsController(QObject):
     """
     Handles hardware input from GPIO pins (buttons, switches etc.).
     Inherits from QObject to enable Qt's signal/slot mechanism.

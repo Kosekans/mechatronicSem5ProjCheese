@@ -43,9 +43,9 @@ def main():
         print("initialized component ArduinoController")
         viewManager = ViewManager(app, internetConnection, updateSuccessful)
         print("initialized component ViewManager")
-        inputController = InputController()
+        gpioPinsController = GpioPinsController()
         print("initialized component InputController")
-        gameController = GameController(gameState, viewManager, arduinoController, inputController)
+        gameController = GameController(gameState, viewManager, arduinoController, gpioPinsController)
         print("initialized component GameController")
 
         # Force fullscreen and disable window controls
@@ -63,7 +63,7 @@ def main():
         # Connect signals/slots after all components exist
         viewManager.connectSignals(gameController)
         print("connected viewManager signals to gameController")
-        inputController.connectSignals(gameController)
+        gpioPinsController.connectSignals(gameController)
         print("connected inputController signals to gameController")
         
         # Start application

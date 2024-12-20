@@ -17,7 +17,7 @@ from config.settings import ERROR_MESSAGES, GAME_SETTINGS
 class GameController(QObject):
     gameStateChanged = pyqtSignal(dict)
     
-    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, inputController: InputController):
+    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, inputController: GpioPinsController):
         super().__init__()  # Initialize QObject
         self.gameState = gameState
         self.viewManager = viewManager
