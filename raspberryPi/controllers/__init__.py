@@ -8,6 +8,6 @@ parent_dir = os.path.join(current_dir, '..')
 sys.path.append(parent_dir)
 
 from controllers.arduinoController import ArduinoController
-from controllers.inputController import InputController
+from raspberryPi.controllers.gpioPinsController import InputController
 
 __all__ = ["ArduinoController", "InputController"]
