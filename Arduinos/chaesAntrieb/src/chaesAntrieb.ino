@@ -7,22 +7,22 @@
 
 // Define the pins for the left motor
 #define ENL 9  // pmw pin
-#define IN1 7
-#define IN2 8
+#define IN1 21
+#define IN2 22
 #define C1L 18  // interupt
 #define C2L 19  // interupt
 // Define the pins for the right motor
 #define ENR 4  // pmw pin
-#define IN3 5
-#define IN4 6
+#define IN3 23
+#define IN4 22
 #define C1R 20  // interupt
 #define C2R 21  // interupt
 // define the pins for the joysticks
 #define JL A0
 #define JR A1
 // define the pins for the left and right limit switch
-#define LSL 2
-#define LSR 3
+#define LSL 3
+#define LSR 2
 
 // volatile keyword prevents the compiler from performing optimizations on the
 // variable that could potentially lead to it being misread. In addition to the
