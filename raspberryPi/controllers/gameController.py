@@ -48,12 +48,21 @@ class GameController(QObject):
             pass#todo
      
     def handleGpioInput(self, pin: int):
-        if pin == self.gpioPinsController.START_BUTTON_PIN:
-            self.clickStartGame()
-        elif pin == self.gpioPinsController.BALL_FALLING_PIN:
-            pass
-        elif pin == self.gpioPinsController.BALL_EJECT_PIN:
-            pass
+        #Dictionary to map button IDs to their corresponding methods
+        pin_actions = {
+            self.gpioPinsController.START_BUTTON_PIN: self.clickStartGame,
+            self.gpioPinsController.BALL_FALLING_PIN: self.triggerBallFallingSensor,
+            self.gpioPinsController.BALL_EJECT_PIN: self.triggerBallEjector
+        }
+        
+        # Call the corresponding method if pin exists
+        action = pin_actions.get(pin)
+        if action:
+            try:
+                action()
+            except Exception as e:
+                # Show error to user through ViewManager
+                self.viewManager.showWarning(str(e))
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
@@ -61,8 +70,7 @@ class GameController(QObject):
             'startGame': self.clickStartGame,
             'saveSettings': self.clickSaveSettings,
             'updatePorts': self.clickUpdatePorts,
-            'initializeHardware': self.clickInitializeHardware,
-            'lightSensor': self.triggerLightSensor
+            'initializeHardware': self.clickInitializeHardware
         }
         
         # Call the corresponding method if button ID exists
@@ -116,7 +124,10 @@ class GameController(QObject):
             self.gameState.hardwareInitialized = True
             raise ValueError(ERROR_MESSAGES['SUCCESS'])
 
-    def triggerLightSensor(self):
+    def triggerBallFallingSensor(self):
+        pass
+
+    def triggerBallEjector(self):
         pass
 
     def handleCheckboxChanged(self, checkbox_id: str, is_checked: bool):
