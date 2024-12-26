@@ -35,13 +35,15 @@ class GpioPinsController(QObject):
     
     # Pin number definitions - using BCM numbering
     START_BUTTON_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['START_BUTTON_PIN']
-    LIGHT_SENSOR_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['LIGHT_BARRIER_PIN']
+    BALL_FALLING_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['BALL_FALLING_PIN']
+    BALL_EJECT_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['BALL_EJECT_PIN']
+    pins = [START_BUTTON_PIN, BALL_FALLING_PIN, BALL_EJECT_PIN]
     
     def __init__(self):
         """Initialize controller and setup GPIO configurations"""
         super().__init__()  # Initialize QObject parent
-        self._last_tick = {self.START_BUTTON_PIN: 0, self.LIGHT_SENSOR_PIN: 0}
-        self._input_state = {self.START_BUTTON_PIN: False, self.LIGHT_SENSOR_PIN: False}
+        self._last_tick = {self.START_BUTTON_PIN: 0, self.BALL_FALLING_PIN: 0, self.BALL_EJECT_PIN: 0}
+        self._input_state = {self.START_BUTTON_PIN: False, self.BALL_FALLING_PIN: False, self.BALL_EJECT_PIN: False}
         self.setupGPIO()  # Fix: Call correct method name
         
     def setupGPIO(self):
@@ -56,7 +58,7 @@ class GpioPinsController(QObject):
             GPIO.setmode(GPIO.BCM)
             GPIO.setwarnings(False)
             
-            for pin in [self.START_BUTTON_PIN, self.LIGHT_SENSOR_PIN]:
+            for pin in self.pins:
                 GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
                 # Handle both edges for more reliable detection
                 GPIO.add_event_detect(
@@ -96,9 +98,11 @@ class GpioPinsController(QObject):
         Emits buttonClicked signal with "startGame" identifier.
         """
         if channel == self.START_BUTTON_PIN:
-            self.buttonClicked.emit("startGame")
-        if channel == self.LIGHT_SENSOR_PIN:
-            self.buttonClicked.emit("lightSensor")
+            self.buttonClicked.emit(self.START_BUTTON_PIN)
+        if channel == self.BALL_FALLING_PIN:
+            self.buttonClicked.emit(self.BALL_FALLING_PIN)
+        if channel == self.BALL_EJECT_PIN:
+            self.buttonClicked.emit(self.BALL_EJECT_PIN)
     
     def cleanup(self):
         GPIO.cleanup()

@@ -17,13 +17,13 @@ from config.settings import ERROR_MESSAGES, GAME_SETTINGS
 class GameController(QObject):
     gameStateChanged = pyqtSignal(dict)
     
-    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, inputController: GpioPinsController):
+    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, gpioPinsController: GpioPinsController):
         super().__init__()  # Initialize QObject
         self.gameState = gameState
         self.viewManager = viewManager
         self.arduinoController = arduinoController
-        self.inputController = inputController
-        self.inputController.buttonClicked.connect(self.handleButtonClicked)
+        self.gpioPinsController = gpioPinsController
+        self.gpioPinsController.buttonClicked.connect(self.handleButtonClicked)
         
         # Initialize hardware state
         self.gameState.portsFound = False
@@ -46,6 +46,14 @@ class GameController(QObject):
             pass#todo
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass#todo
+     
+    def handleGpioInput(self, pin: int):
+        if pin == self.gpioPinsController.START_BUTTON_PIN:
+            self.clickStartGame()
+        elif pin == self.gpioPinsController.BALL_FALLING_PIN:
+            pass
+        elif pin == self.gpioPinsController.BALL_EJECT_PIN:
+            pass
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
