@@ -17,13 +17,13 @@ from config.settings import ERROR_MESSAGES, GAME_SETTINGS
 class GameController(QObject):
     gameStateChanged = pyqtSignal(dict)
     
-    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, inputController: GpioPinsController):
+    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, gpioPinsController: GpioPinsController):
         super().__init__()  # Initialize QObject
         self.gameState = gameState
         self.viewManager = viewManager
         self.arduinoController = arduinoController
-        self.inputController = inputController
-        self.inputController.buttonClicked.connect(self.handleButtonClicked)
+        self.gpioPinsController = gpioPinsController
+        self.gpioPinsController.buttonClicked.connect(self.handleButtonClicked)
         
         # Initialize hardware state
         self.gameState.portsFound = False
@@ -46,6 +46,23 @@ class GameController(QObject):
             pass#todo
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass#todo
+     
+    def handleGpioInput(self, pin: int):
+        #Dictionary to map button IDs to their corresponding methods
+        pin_actions = {
+            self.gpioPinsController.START_BUTTON_PIN: self.clickStartGame,
+            self.gpioPinsController.BALL_FALLING_PIN: self.triggerBallFallingSensor,
+            self.gpioPinsController.BALL_EJECT_PIN: self.triggerBallEjector
+        }
+        
+        # Call the corresponding method if pin exists
+        action = pin_actions.get(pin)
+        if action:
+            try:
+                action()
+            except Exception as e:
+                # Show error to user through ViewManager
+                self.viewManager.showWarning(str(e))
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
@@ -53,8 +70,7 @@ class GameController(QObject):
             'startGame': self.clickStartGame,
             'saveSettings': self.clickSaveSettings,
             'updatePorts': self.clickUpdatePorts,
-            'initializeHardware': self.clickInitializeHardware,
-            'lightSensor': self.triggerLightSensor
+            'initializeHardware': self.clickInitializeHardware
         }
         
         # Call the corresponding method if button ID exists
@@ -108,7 +124,10 @@ class GameController(QObject):
             self.gameState.hardwareInitialized = True
             raise ValueError(ERROR_MESSAGES['SUCCESS'])
 
-    def triggerLightSensor(self):
+    def triggerBallFallingSensor(self):
+        pass
+
+    def triggerBallEjector(self):
         pass
 
     def handleCheckboxChanged(self, checkbox_id: str, is_checked: bool):
