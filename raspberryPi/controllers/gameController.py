@@ -36,13 +36,17 @@ class GameController(QObject):
 
     
     def setupGame(self):
-        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['follow']:
-            pass#todo
+        self.arduinoController.sendMode(self.gameState.getInfoForAntrieb)
+        self.prepareRocket
+        if self.gameState.gameMode == GAME_SETTINGS['GAME_MMDE']['follow']:
+            self.arduinoController.sendCoords(self.gameState.goalCoordsToString)
+            while self.gameState.active == True:
+                pass
+            self.gameState.reset
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
-            #chaesZielsystemCom.writeSerial(goalCoordsToString(currentGame.goalCoords,currentGame.goalCoordsVelo))
-            pass#todo
+            pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
-            pass#todo
+            pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass#todo
      
@@ -103,6 +107,7 @@ class GameController(QObject):
         elif not self.gameState.hardwareInitialized:
             raise ValueError(ERROR_MESSAGES['HARDWARE_NOT_INITIALIZED'])
         # Proceed with game start logic
+        self.setupGame()
 
     def clickSaveSettings(self):
         # Save settings to (maybe???????????) config file or certain model object
