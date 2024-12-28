@@ -36,6 +36,7 @@ class GameController(QObject):
 
     
     def setupGame(self):
+        self.arduinoController.sendMode(self.gameState.getInfoForAntrieb)
         self.prepareRocket
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MMDE']['follow']:
             pass
@@ -48,8 +49,23 @@ class GameController(QObject):
             self.gameState.reset
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
             pass
+            pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
-            pass#todo
+            pass
+            
+
+    def prepareRocket():
+        self.arduinoController.sendAntrieb(self.gameState.getInfoForAntrieb)
+        '''
+        self.arduinoController.sendAntrieb("null")
+        while self.arduinoController.getAntrieb != "DONE": #todo in arduino code
+            pass
+        '''
+        self.arduinoController.sendAntrieb("EJECTPOS")
+        while self.gameState.ballInRocket == False:
+            pass
+        #to do, wait for signal ball in rockets
+        self.arduinoController.sendAntrieb("STARTPOS")
      
     def handleGpioInput(self, event: str):
         print(f"GameController received GPIO event: {event}") # Add debug print
