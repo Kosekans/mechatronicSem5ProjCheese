@@ -11,9 +11,26 @@ from config.settings import GAME_SETTINGS
 
 class GameState:
     def __init__(self):
+        self.portsFound
+        self.hardwareInitialized
+        self.active
+        self.chaesAntriebCoords
+        self.chaesAntriebModus
+        self.goalCoords
+        self.goalCoordsVelo
+        self.gameMode
+        self.inverseSticks
+        self.rocketVelocity
+        self.latency
+        self.randomInverseSticks
+        self.randomRocketVelocity
+        self.randomLatency
+        self.reset
+        
+    def reset(self):
         self.portsFound: bool = False
         self.hardwareInitialized: bool = False
-        self.started: bool = False
+        self.active: bool = False
         self.chaesAntriebCoords: str = None
         self.chaesAntriebModus: str = None
         self.goalCoords: list[int] = None
@@ -28,6 +45,21 @@ class GameState:
 
     def goalCoordsToString(self):
         return "{}/{}/{}".format(self.goalCoords[0], self.goalCoords[1], self.goalCoordsVelo)
+    
+    def getInfoForAntrieb(self):
+        return (
+            "{}/{}/{}/{}/{}/{}/{}/{}/{}".format(
+            self.chaesAntriebModus,
+            self.goalCoordsVelo,
+            self.gameMode,
+            int(self.inverseSticks),
+            self.rocketVelocity,
+            self.latency,
+            int(self.randomInverseSticks),
+            int(self.randomRocketVelocity),
+            int(self.randomLatency)
+            )
+        )
 
     def toString(self): #for debuging
         return (
