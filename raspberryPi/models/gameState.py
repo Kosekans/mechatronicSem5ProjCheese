@@ -48,8 +48,7 @@ class GameState:
     
     def getInfoForAntrieb(self):
         return (
-            "{}/{}/{}/{}/{}/{}/{}/{}/{}".format(
-            self.chaesAntriebModus,
+            "{}/{}/{}/{}/{}/{}/{}/{}".format(
             self.goalCoordsVelo,
             self.gameMode,
             int(self.inverseSticks),
