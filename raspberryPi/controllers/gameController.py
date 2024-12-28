@@ -54,7 +54,7 @@ class GameController(QObject):
             pass
             
 
-    def prepareRocket():
+    def prepareRocket(self):
         self.arduinoController.sendAntrieb(self.gameState.getInfoForAntrieb)
         '''
         self.arduinoController.sendAntrieb("null")
