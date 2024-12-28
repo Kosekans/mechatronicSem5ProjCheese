@@ -50,10 +50,10 @@ class ArduinoController:
             return False
     
     def sendMode(self, x: str):
-        self.arduinoAntrieb.writeSerial("{}\n".format(x))
+        self.arduinoAntrieb.writeSerial(x)
 
     def sendCoords(self, x: str):
-        self.arduinoZielsystem.writeSerial("{}\n".format(x))
+        self.arduinoZielsystem.writeSerial(x)
 
     def getPos(self):
         return self.arduinoAntrieb.readSerialLine()
