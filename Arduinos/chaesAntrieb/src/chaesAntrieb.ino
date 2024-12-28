@@ -37,6 +37,7 @@ const int BOARD_WIDTH = 533;
 const int BOARD_HIGHT = 770;
 const int COORD_SCAL = 1;  // coord = encodersteps / SCAL
 const int DEADZONE = 30;  // deadzone for the joysticks
+const int MAX_LATENCY = 1000;  // max latency in ms
 
 // if boarder is near
 bool blockLeftPos = false;
@@ -48,10 +49,17 @@ bool blockRightNeg = false;
 bool dirL;
 bool dirR;
 
-// modi: -1 = dont move/ default, 0 = transportmode, 1 = joystick,...
-int gameMode = -1;
 // coordinates of the rocket
 int* coords;
+
+// settings from gui, defaulft
+bool inverseSticks = false;
+float rocketVelocity = 1; //from 0 to 1
+int latency = 0; //ms
+bool randomInverseSticks = false;
+bool randomRocketVelocity = false;
+bool randomLatency = false;
+bool gameActive = false;
 
 void setup() {
   // dc motor entcoder
@@ -88,7 +96,7 @@ void loop() {
   checkForInput();/*
   coords = getCoords();
   blockCheck(coords);*/
-  executeGameMode(analogRead(JL), analogRead(JR), gameMode);
+  executeGameMode(analogRead(JL), analogRead(JR));
 }
 
 void checkForInput() {
@@ -98,34 +106,31 @@ void checkForInput() {
       Serial.println("chaesAntrieb");
       return;
     }
-    if (input == "transportmode") {
-      gameMode = 0;
-      return;
-    }
-    if (input == "gameOver"){
-      sentCoords(coords);
-      gameMode = -1;
-      return;
-    }
+    int firstSlash = input.indexOf('/');
+    int secondSlash = input.indexOf('/', firstSlash + 1);
+    int thirdSlash = input.indexOf('/', secondSlash + 1);
+    int fourthSlash = input.indexOf('/', thirdSlash + 1);
+    int fifthSlash = input.indexOf('/', fourthSlash + 1);
+    int sixthSlash = input.indexOf('/', fifthSlash + 1);
+
+    inverseSticks = input.substring(0, firstSlash) == "1";
+    rocketVelocity = input.substring(firstSlash + 1, secondSlash).toFloat();
+    latency = input.substring(secondSlash + 1, thirdSlash).toInt();
+    randomInverseSticks = input.substring(thirdSlash + 1, fourthSlash) == "1";
+    randomRocketVelocity = input.substring(fourthSlash + 1, fifthSlash) == "1";
+    randomLatency = input.substring(fifthSlash + 1, sixthSlash) == "1";
+    gameActive = true;
   }
 }
 
-void executeGameMode(int jValL, int jValR, int gameMode) {
-  switch (gameMode) {
-    case -1: //default
-      moveRocket(0, 0);
-      break;
-    case 0: //transportmodus
-      transportmodus();
-      break;
-    case 1:
-      // move the motors in the direction of the joystick and different speed,
-      // depending on joysticktilt
-      moveRocket(
-          (int)round(mapFloat(jValL, 0, MAX_JVAL, -MAX_SPEED, MAX_SPEED)),
-          (int)round(mapFloat(jValR, 0, MAX_JVAL, -MAX_SPEED, MAX_SPEED)));
-      break;
-  }
+void executeGameMode(int jValL, int jValR) {
+  bool inverse = randomInverseSticks ? random(0, 2) : inverseSticks;
+  int speed = round((randomRocketVelocity ? random(0, 2) : rocketVelocity) * MAX_SPEED) * (inverse ? -1 : 1) * (gameActive ? 1 : 0);
+  int lat = randomLatency ? random(0, MAX_LATENCY) : latency;
+  delay(lat);
+  moveRocket(
+    (int)round(mapFloat(jValL, 0, MAX_JVAL, -speed, speed)),
+    (int)round(mapFloat(jValR, 0, MAX_JVAL, -speed, speed)));
 }
 
 void sentCoords(int coords[2]){
