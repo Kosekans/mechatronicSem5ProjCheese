@@ -33,11 +33,15 @@ volatile int posVR = 0;
 
 const long MAX_SPEED = 255;  // Maximum speed for the motors
 const long MAX_JVAL = 1023;  // 1023 max value for joysticks. min value is 0
+const int MAX_LATENCY = 1000;  // max latency in ms
+
+//vaalues need to be adjusted
+const int DEADZONE = 30;  // deadzone for the joysticks
 const int BOARD_WIDTH = 533;
 const int BOARD_HIGHT = 770;
-const int COORD_SCAL = 1;  // coord = encodersteps / SCAL
-const int DEADZONE = 30;  // deadzone for the joysticks
-const int MAX_LATENCY = 1000;  // max latency in ms
+const int COORD_SCAL = 100;  // mm = steps / SCAL
+const int LIMIT_SWITCH_HIGHT = 770;  
+
 
 // if boarder is near
 bool blockLeftPos = false;
@@ -50,7 +54,7 @@ bool dirL;
 bool dirR;
 
 // coordinates of the rocket
-int* coords;
+int coords[2];
 
 // settings from gui, defaulft
 bool inverseSticks = false;
@@ -87,39 +91,56 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(LSR), readFallingLSR, FALLING);
 
   // null the coords at begining
-  //findCoordOrigin();
+  findCoordOrigin();
   Serial.begin(9600);
   Serial.setTimeout(10);
 }
 
 void loop() {
-  checkForInput();/*
-  coords = getCoords();
-  blockCheck(coords);*/
+  checkForInput();
+  getCoords();
+  blockCheck();
   executeGameMode(analogRead(JL), analogRead(JR));
 }
 
 void checkForInput() {
   if (Serial.available() > 0) {
     String input = Serial.readStringUntil('\n');
+     if (input == "COORDS") {
+      sentCoords();
+      return;
+    }  
     if (input == "ID") {
       Serial.println("chaesAntrieb");
       return;
     }
+    if(input == "EJECTPOS"){
+      moveToEjectPos();
+      return;
+    }
+    if(input == "STARTPOS"){
+      moveToStartPos();
+      return;
+    }
+    if (input == "TRANSPORT") {
+      transportmodus();
+      return;
+    }  
     int firstSlash = input.indexOf('/');
     int secondSlash = input.indexOf('/', firstSlash + 1);
     int thirdSlash = input.indexOf('/', secondSlash + 1);
     int fourthSlash = input.indexOf('/', thirdSlash + 1);
     int fifthSlash = input.indexOf('/', fourthSlash + 1);
-    int sixthSlash = input.indexOf('/', fifthSlash + 1);
 
-    inverseSticks = input.substring(0, firstSlash) == "1";
-    rocketVelocity = input.substring(firstSlash + 1, secondSlash).toFloat();
-    latency = input.substring(secondSlash + 1, thirdSlash).toInt();
-    randomInverseSticks = input.substring(thirdSlash + 1, fourthSlash) == "1";
-    randomRocketVelocity = input.substring(fourthSlash + 1, fifthSlash) == "1";
-    randomLatency = input.substring(fifthSlash + 1, sixthSlash) == "1";
-    gameActive = true;
+    if (fifthSlash != -1) {
+      inverseSticks = input.substring(0, firstSlash) == "1";
+      rocketVelocity = input.substring(firstSlash + 1, secondSlash).toFloat();
+      latency = input.substring(secondSlash + 1, thirdSlash).toInt();
+      randomInverseSticks = input.substring(thirdSlash + 1, fourthSlash) == "1";
+      randomRocketVelocity = input.substring(fourthSlash + 1, fifthSlash) == "1";
+      randomLatency = input.substring(fifthSlash + 1) == "1";
+      gameActive = true;
+    }
   }
 }
 
@@ -133,7 +154,7 @@ void executeGameMode(int jValL, int jValR) {
     (int)round(mapFloat(jValR, 0, MAX_JVAL, -speed, speed)));
 }
 
-void sentCoords(int coords[2]){
+void sentCoords(){
   Serial.println(String(coords[0]) + "/" + String(coords[1]));
 }
 
@@ -148,41 +169,43 @@ int* getCoords() {
     posR = posVR;
   }
   // coordinates
-  return boxCoords(corectCoords(calculateCoords(BOARD_WIDTH, posL, posR),
-                                COORD_SCAL, BOARD_WIDTH / 2, BOARD_HIGHT),
-                   BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
+  calculateCoords(BOARD_WIDTH, posL * COORD_SCAL, posR * COORD_SCAL);
+  boxCoords(BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
 }
 
-void blockCheck(int coords[2]) {
+void blockCheck() {
   blockLeftPos = blockRightPos = (coords[0] + coords[1]) < BOARD_WIDTH;
+  blockLeftPos = coords[0] < BOARD_HIGHT;
+  blockRightPos = coords[1] < BOARD_HIGHT;
+  blockLeftNeg = coords[0] > 0;
+  blockRightNeg = coords[1] > 0;
 }
 
 void findCoordOrigin() {
-  while (!blockLeftNeg && !blockRightNeg) {
-    moveRocket(-MAX_SPEED, -MAX_SPEED);
-  }
-  posVL = 0;
-  posVR = 0;
+  //move rocket to the top to till the limit switches are pressed for both sides
+  //to do: moving sequence
+  
+  posVL = LIMIT_SWITCH_HIGHT / COORD_SCAL;
+  posVR = LIMIT_SWITCH_HIGHT / COORD_SCAL;
+}
+
+void moveToEjectPos() {
+  //move rocket to the eject position
+  //to do: moving sequence
+}
+
+void moveToStartPos() {
+  //move rocket to the start position
+  //to do: moving sequence
 }
 
 float* calculateCoords(int distance, int left, int right) {
   float angle = (float)(left * distance) / (float)(left * left + right * right);
-  float x = left * angle;
-  float y = right * angle;
-  float* coords = new float[2]{x, y};
-  return coords;
+  coords[0] = round(left * angle);
+  coords[1] = round(right * angle);
 }
 
-int* corectCoords(float coords[2], int scal, int xCor, int yCor) {
-  int* corectedCoords = new int[2];
-  corectedCoords[0] = coords[0] / scal;
-  corectedCoords[1] = coords[0] / scal;
-  corectedCoords[0] = coords[0] - xCor;
-  corectedCoords[1] = coords[0] - yCor;
-  return corectedCoords;
-}
-
-int* boxCoords(int coords[2], int leftBorder, int rightBorder, int lowerBorder,
+int* boxCoords(int leftBorder, int rightBorder, int lowerBorder,
                int upperBorder) {
   if (coords[0] < leftBorder) {
     coords[0] = leftBorder;
