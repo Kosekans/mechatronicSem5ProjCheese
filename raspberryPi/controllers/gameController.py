@@ -37,23 +37,25 @@ class GameController(QObject):
 
     
     def setupGame(self):
-        self.arduinoController.sendMode(self.gameState.getInfoForAntrieb)
         self.prepareRocket
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MMDE']['follow']:
+            pass
+        elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
             self.arduinoController.sendCoords(self.gameState.goalCoordsToString)
             while self.gameState.active == True:
                 pass
             self.gameState.reset
-        elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
-            pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
             pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass
             
 
-    def prepareRocket():
-        pass#todo
+    def prepareRocket(self):
+        self.arduinoController.sendMode(self.gameState.getInfoForAntrieb)
+        self.arduinoController.sendMode("EJECTPOS")
+        #to do, wait for signal ball in rockets
+        self.arduinoController.sendMode("STARTPOS")
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
