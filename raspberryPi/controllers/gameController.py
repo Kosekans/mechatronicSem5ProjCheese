@@ -36,7 +36,6 @@ class GameController(QObject):
 
     
     def setupGame(self):
-        self.arduinoController.sendMode(self.gameState.getInfoForAntrieb)
         self.prepareRocket
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MMDE']['follow']:
             pass
@@ -54,37 +53,8 @@ class GameController(QObject):
             pass
             
 
-    def prepareRocket(self):
-        self.arduinoController.sendAntrieb(self.gameState.getInfoForAntrieb)
-        '''
-        self.arduinoController.sendAntrieb("null")
-        while self.arduinoController.getAntrieb != "DONE": #todo in arduino code
-            pass
-        '''
-        self.arduinoController.sendAntrieb("EJECTPOS")
-        while self.gameState.ballInRocket == False:
-            pass
-        #to do, wait for signal ball in rockets
-        self.arduinoController.sendAntrieb("STARTPOS")
-     
-    def handleGpioInput(self, event: str):
-        print(f"GameController received GPIO event: {event}") # Add debug print
-        pin_actions = {
-            'Start': self.clickStartGame,
-            'Ball lost': self.setBallInRocket(False),
-            'Ball detected': self.setBallInRocket(True)
-        }
-        
-        action = pin_actions.get(event)
-        if action:
-            try:
-                action()
-            except Exception as e:
-                print(f"Error handling GPIO input: {e}") # Add debug print
-                self.viewManager.showWarning(str(e))
-     
-    def setBallInRocket(self, value: bool):
-        self.gameState.ballInRocket = value
+    def prepareRocket():
+        pass#todo
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
