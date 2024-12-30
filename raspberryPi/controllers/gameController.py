@@ -36,15 +36,14 @@ class GameController(QObject):
 
     
     def setupGame(self):
-        self.arduinoController.sendMode(self.gameState.getInfoForAntrieb)
         self.prepareRocket
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MMDE']['follow']:
+            pass
+        elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
             self.arduinoController.sendCoords(self.gameState.goalCoordsToString)
             while self.gameState.active == True:
                 pass
             self.gameState.reset
-        elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
-            pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
             pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
