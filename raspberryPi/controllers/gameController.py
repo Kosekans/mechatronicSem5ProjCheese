@@ -40,7 +40,9 @@ class GameController(QObject):
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MMDE']['follow']:
             pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
+            self.gameState.goalCoords = HelperFunctions.createGoalCoords()
             self.arduinoController.sendCoords(self.gameState.goalCoordsToString)
+            self.gameState.active = True
             while self.gameState.active == True:
                 pass
             self.gameState.reset
