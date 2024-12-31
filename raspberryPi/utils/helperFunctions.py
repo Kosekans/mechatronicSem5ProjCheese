@@ -1,6 +1,9 @@
 import os
 import platform
 import sys
+import json
+import random
+
 # Get the current file's directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
 # Add the parent directory to the system path
@@ -17,5 +20,19 @@ class HelperFunctions:
 
     @staticmethod
     def createGoalCoords():
-        goalCoords: list[int] = [2341, 2134]
-        return goalCoords
+        # Load the JSON file
+        with open("coordinates.json", "r") as file:
+            coordinates = json.load(file)
+        
+        # Get the length of the coordinates list
+        length = len(coordinates)
+        
+        # Choose a random index within the range of the list length
+        random_index = random.randint(0, length - 1)
+        
+        # Retrieve the random set of x/y coordinates
+        random_coordinates = coordinates[random_index] #Form: Python Dictionary
+        
+        #print(f"Random coordinates: X = {random_coordinates['X']}, Y = {random_coordinates['Y']}")
+        
+        return random_coordinates 
