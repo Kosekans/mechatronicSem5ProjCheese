@@ -33,6 +33,6 @@ class HelperFunctions:
         # Retrieve the random set of x/y coordinates
         random_coordinates = coordinates[random_index] #Form: Python Dictionary
         
-        print(f"Random coordinates: X = {random_coordinates['X']}, Y = {random_coordinates['Y']}")
+        #print(f"Random coordinates: X = {random_coordinates['X']}, Y = {random_coordinates['Y']}")
         
         return random_coordinates 
