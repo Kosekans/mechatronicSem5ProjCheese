@@ -1,1 +1,1 @@
-
+The ArmCalculator library is a custom library for arduino. It does all the calculations required by the goal system.
