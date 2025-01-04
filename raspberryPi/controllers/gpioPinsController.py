@@ -1,4 +1,5 @@
 # inputController.py
+import time
 import os
 import sys
 from pathlib import Path
@@ -110,6 +111,59 @@ class GpioPinsController(QObject):
     def connectSignals(self, controller) -> None:
         self.buttonClicked.connect(controller.handleButtonClicked)
 
+    def 
     @pyqtSlot(str)
     def onButtonClick(self, button_id: str) -> None:
         self.buttonClicked.emit(button_id)
+
+    def ejectball(self):
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(BALL_EJECT_PIN, GPIO.OUT)
+
+        p = GPIO.PWM(BALL_EJECT_PIN, 50) # GPIO 17 als PWM mit 50Hz
+        p.start(2.5) # Initialisierung
+        try:
+            # Rotate to 180 degrees
+            p.ChangeDutyCycle(12.5)
+            print("Ejecting ball")
+            time.sleep(5)  # Wait for 5 seconds
+            # Return to the starting position (0 degrees)
+            p.ChangeDutyCycle(2.5)
+        finally:
+            print("Servo in starting position")
+            p.stop()
+            GPIO.cleanup()
+
+    def lostball(self):
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set up pin as input with pull-up resistor
+
+        try:
+            input_state = GPIO.input(BALL_FALLING_PIN)
+            if input_state == GPIO.LOW:
+                print("Ball falling detected")
+        finally:
+            GPIO.cleanup()
+
+    def startgame(self):
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set up pin as input with pull-up resistor
+
+        try:
+            input_state = GPIO.input(START_BUTTON_PIN)
+            if input_state == GPIO.LOW:
+                print("Button pressed")
+        finally:
+            GPIO.cleanup()    
+
+    def blinkStartButtonLed(self):
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(START_BUTTON_LED_PIN, GPIO.OUT)
+
+        while True:
+            try:
+                GPIO.output(START_BUTTON_LED_PIN, GPIO.HIGH)
+                time.sleep(1)
+                GPIO.output(START_BUTTON_LED_PIN, GPIO.LOW)
+            finally:
+                GPIO.cleanup()

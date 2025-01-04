@@ -21,7 +21,8 @@ RASPBERRY_PI_SETTINGS = {
     'GPIO_PINS': {
         'START_BUTTON_PIN': 17, # GPIO17 physical pin 11
         'BALL_FALLING_PIN': 18, # GPIO18 physical pin 12
-        'BALL_EJECT_PIN': 27 # GPIO27 physical pin 13
+        'BALL_EJECT_PIN': 27, # GPIO27 physical pin 13
+        'START_BUTTON_LED_PIN': 22 # GPIO22 physical pin 15
     },
     'OS_USERNAME': 'chaes'
 }
