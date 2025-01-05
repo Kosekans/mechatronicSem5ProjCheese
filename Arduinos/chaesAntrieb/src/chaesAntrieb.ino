@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <util/atomic.h>
 #include "PIDController.h"
+#include <Adafruit_NeoPixel.h>
+#include <FireTimer.h>
 
 // Define the pins for the left motor
 #define ENR 4   // pmw pin (speed)
@@ -23,6 +25,14 @@
 // Define the pins for the left and right limit switch
 #define limitSwitchL 3
 #define limitSwitchR 2
+
+// Define the pins for the NeoPixel
+#define LED_BOARDER_PIN 9
+#define LED_RING_PIN 10
+
+// Define the number of LEDs
+#define NUMPIXELS_BOARDER 131
+#define NUMPIXELS_RING 22
 
 // Constants
 const long MIN_JVALR = 370;  // min value for joysticks
@@ -88,13 +98,30 @@ enum Modes {
   PLAYER_MODE,
   ERROR_MODE,
   ORIGIN_MODE,
-  EJECT_MODE
+  EJECT_MODE,
+  DEMO_MODE
 };
 // defaulft mode
 Modes mode = PLAYER_MODE;
 
 // PID Settings
-  float error, integral ,derivative, previousError;
+float error, integral, derivative, previousError;
+
+// NeoPixel Objects
+Adafruit_NeoPixel boarderStrip(NUMPIXELS_BOARDER, LED_BOARDER_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel ringStrip(NUMPIXELS_RING, LED_RING_PIN, NEO_GRB + NEO_KHZ800);
+
+// NeoPixel Elements
+int initialisationCounter = 0;
+int colorCounter = 0;
+bool wave = false;
+int waveCounter = 0;
+int random1, random2, random3, random4, random5;
+FireTimer blinkTimer;
+FireTimer waveTimer;
+bool change = true;
+uint32_t colorR;
+uint32_t colorB;
 
 void setup() {
   // dc motor entcoder
@@ -119,6 +146,18 @@ void setup() {
   pinMode(limitSwitchR, INPUT);
   attachInterrupt(digitalPinToInterrupt(limitSwitchL), readLimitSwitchL, FALLING);
   attachInterrupt(digitalPinToInterrupt(limitSwitchR), readLimitSwitchR, FALLING);
+
+  // Setting up the NeoPixel
+  boarderStrip.begin();
+  ringStrip.begin();
+  boarderStrip.show();
+  ringStrip.show();
+  boarderStrip.setBrightness(50);
+  ringStrip.setBrightness(50);
+  allGreen();
+
+  blinkTimer.begin(250);
+  waveTimer.begin(2000);
 
   Serial.begin(9600);
   Serial.setTimeout(10);
@@ -186,12 +225,14 @@ void executemode() {
   switch (mode) {
     case INITIALIZATION_MODE:
       findCoordOrigin();
+      ledInitialisation();
       break;
     case TRANSPORT_MODE:
       transportMode();
       break;
     case PLAYER_MODE:
       playerMode();
+      playLED();
       break;
     case ORIGIN_MODE:
       moveToStartPos();
@@ -200,6 +241,7 @@ void executemode() {
       moveToEjectPos();
       break;
     case ERROR_MODE:
+      ledError();
       break;
   }
 }
@@ -250,21 +292,16 @@ void findCoordOrigin() {
   switch (phase) {
     case 0:
       phase = approachOrigin(NULL_SPEED1, phase);
-      Serial.println("1");
       break;
     case 1:
       phase = distanceToOrigin(NULL_SPEED1, phase);
-      Serial.println("2");
       break;
     case 2:
       phase = approachOrigin(NULL_SPEED2, phase);
-      Serial.println("3");
       break;
     case 3:
       phase = distanceToOrigin(MAX_SPEED, phase);
-      Serial.println("4");
     case 4:
-      Serial.print("rd");
       mode = EJECT_MODE;
       break;
   }
@@ -277,9 +314,6 @@ void setMotorState(int in1, int in2, int en, int speed) {
 }
 
 int approachOrigin(int speed, int phase) {
-  Serial.println("isnd");
-  Serial.println(nullLeft);
-  Serial.println(nullRight);
   if (!nullLeft) {
     setMotorState(IN1, IN2, ENL, speed);
   }
@@ -287,7 +321,6 @@ int approachOrigin(int speed, int phase) {
     setMotorState(IN3, IN4, ENR, speed);
   }
   if (nullLeft && nullRight) {
-    Serial.println("IFN");
     posVL = posVR = 0;
     phase++;
   }
@@ -328,8 +361,7 @@ void moveToStartPos() {
   int goalDistance = (FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2)) ^ 2 + (FEED_THROUGH_OFFSETY + BOARD_HIGHT) ^ 2;
   int deltaLeft = posVL - goalDistance;
   int deltaRight = posVR - goalDistance;
-  if (posVL < RADIUS_TO_START)
-  {
+  if (posVL < RADIUS_TO_START) {
     setMotorState(IN2, IN1, ENL, MAX_SPEED);
   }
   regulateSpeed(deltaLeft, left);
@@ -360,13 +392,13 @@ void regulateSpeed(int delta, bool left) {
 }
 
 float* calculateCoords(int distance, int left, int right) {
-  Serial.print("left: ");
+  /*Serial.print("left: ");
   Serial.println(left);
   Serial.print("right: ");
-  Serial.println(right);
+  Serial.println(right);*/
   float angle = (float)(left * distance) / (float)(left * left + right * right);
-  Serial.print("angle: ");
-  Serial.println(angle);
+  //Serial.print("angle: ");
+  //Serial.println(angle);
   coords[0] = round(left * angle);
   coords[1] = round(right * angle);
 }
@@ -485,6 +517,106 @@ void stopMotors() {
 float mapFloat(long x, long in_min, long in_max, long out_min, long out_max) {
   return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min;
 }
+
+void allGreen() {
+  for (int i = 0; i < NUMPIXELS_BOARDER; i++) {
+    boarderStrip.setPixelColor(i, boarderStrip.Color(0, 255, 0));
+  }
+  for (int i = 0; i < NUMPIXELS_RING; i++) {
+    ringStrip.setPixelColor(i, ringStrip.Color(0, 255, 0));
+  }
+  ringStrip.show();
+  boarderStrip.show();
+}
+
+void ledError() {
+  if (blinkTimer.fire()) {
+    change = !change;
+    blinkTimer.reset();
+  }
+
+  if (change) {
+    for (int i = 0; i < NUMPIXELS_BOARDER; i++) {
+      boarderStrip.setPixelColor(i, boarderStrip.Color(255, 0, 0));
+    }
+    for (int i = 0; i < NUMPIXELS_RING; i++) {
+      ringStrip.setPixelColor(i, ringStrip.Color(255, 0, 0));
+    }
+  } else {
+    ringStrip.clear();
+    boarderStrip.clear();
+  }
+  ringStrip.show();
+  boarderStrip.show();
+}
+
+void playLED() {
+  if (waveTimer.fire() && !wave) {
+    wave = true;
+    random1 = random(100, 250);
+    random2 = random(50, 250);
+    random3 = random(0, 150);
+    random4 = random(1, 200);
+    random5 = random(1,30);
+    waveTimer.update(random(1000, 3000));
+  }
+  if (wave == true) {
+    createWave();
+  } else {
+    for (int i = 0; i < NUMPIXELS_BOARDER; i++) {
+      boarderStrip.setPixelColor(i, boarderStrip.Color(255, 255, 255));
+    }
+    for (int i = 0; i < NUMPIXELS_RING; i++) {
+      ringStrip.setPixelColor(i, ringStrip.Color(255, 0, 0));
+    }
+    ringStrip.show();
+    boarderStrip.show();
+  }
+}
+
+void createWave() {
+  if (waveCounter % random4 == 0) {
+      if (waveCounter / random4 < NUMPIXELS_BOARDER + random5) {
+        boarderStrip.setPixelColor(waveCounter / random4, boarderStrip.Color(255 - random1, 255 - random2, 255 - random3));
+        boarderStrip.setPixelColor(waveCounter / random4 - random5, boarderStrip.Color(255, 255, 255));
+      }
+      if (waveCounter / random4 == NUMPIXELS_BOARDER + random5) {
+        Serial.println("LSD");
+        wave = false;
+        waveCounter = 0;
+      }
+      boarderStrip.show();
+    }
+  waveCounter++;
+}
+
+void ledInitialisation() {
+  const uint32_t colors[7][3] = {
+    { 255, 0, 0 }, { 0, 255, 0 }, { 0, 0, 255 }, { 255, 255, 0 }, { 255, 0, 255 }, { 0, 255, 255 }, { 255, 255, 255 }
+  };
+
+  colorR = ringStrip.Color(colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
+  colorB = boarderStrip.Color(colors[colorCounter][0], colors[colorCounter][1], colors[colorCounter][2]);
+
+  if (initialisationCounter == 0) {
+    ringStrip.clear();
+    boarderStrip.clear();
+  } else if (initialisationCounter % 10 == 0 && initialisationCounter / 10 < NUMPIXELS_BOARDER) {
+    boarderStrip.setPixelColor((initialisationCounter / 10 - 1), colorB);
+  } else if (initialisationCounter >= NUMPIXELS_BOARDER && initialisationCounter % 10 != 0) {
+    ringStrip.setPixelColor((initialisationCounter / 10) - NUMPIXELS_BOARDER, colorR);
+  }
+
+  if (initialisationCounter / 10 == NUMPIXELS_RING + NUMPIXELS_BOARDER) {
+    initialisationCounter = 0;
+    colorCounter = (colorCounter + 1) % 7;
+  }
+  boarderStrip.show();  // Update strip with new contents
+  ringStrip.show();     // Update strip with new contents
+  initialisationCounter++;
+}
+
+
 
 int PIDController(float delta) {
   float Kp = 1.0;                     // Proportional gain
