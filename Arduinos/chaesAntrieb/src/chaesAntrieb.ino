@@ -1,17 +1,18 @@
 #include <Arduino.h>
 #include <util/atomic.h>
+#include "PIDController.h"
 
 // Define the pins for the left motor
 #define ENR 4   // pmw pin (speed)
-#define IN4 25  // direction pin (forward)
-#define IN3 24  // direction pin (backward)
+#define IN3 24  // direction pin (forward)
+#define IN4 25  // direction pin (backward)
 #define C1R 18  // interupt (encoder)
 #define C2R 19  // interupt (encoder)
 
 // Define the pins for the right motor
 #define ENL 5   // pmw pin (speed)
-#define IN2 23  // direction pin (forward)
-#define IN1 22  // direction pin (backward)
+#define IN1 22  // direction pin (forward)
+#define IN2 23  // direction pin (backward)
 #define C1L 20  // interupt (encoder)
 #define C2L 21  // interupt (encoder)
 
@@ -30,31 +31,33 @@ const long MAX_JVALR = 725;  //  max value for joysticks
 const long MAX_JVALL = 650;
 
 const int BOARD_WIDTH = 533;
+const int FEED_THROUGH_OFFSETX = 100;
+const int FEED_THROUGH_OFFSETY = 100;
 const int BOARD_HIGHT = 770;
+const int WIRE_LENGHT = 1000;
 const int COORD_SCAL = 1;  // mm = steps / SCAL
 const int LIMIT_SWITCH_HIGHT = 770;
 
 const long MAX_SPEED = 255;   // Maximum speed for the motors
-const int NULL_SPEED1 = 125;  // nulling speeds
-const int NULL_SPEED2 = 120;
+const int NULL_SPEED1 = 150;  // nulling speeds
+const int NULL_SPEED2 = 100;
 
 const int DEADZONE = 30;       // deadzone for the joysticks
 const int MAX_LATENCY = 1000;  // max latency in ms
 
 //positions
-const int EJECT_POSX = 10;
-const int EJECT_POSY = 10;
-const int NULLING_OFFSETX = 20;
-const int NULLING_OFFSETY = 20;
-const int RADIUS_TO_EJECTPOS = 10;
+const int EJECT_POS[2] = { 0, -10 };
+const int NULLING_POS[2] = { 0, -50 };
+const int RADIUS_TO_START = 10;
 
 // Volatile variables
 volatile int posVL = 0;  // position of the left motor
 volatile int posVR = 0;  // position of the right motor
 
 // Flags for nulling the coordinates
-volatile bool nullLeft = false;
-volatile bool nullRight = false;
+bool nullLeft = false;
+bool nullRight = false;
+int phase = 0;
 
 // Flags for blocking movement
 bool blockLeftPos = false;
@@ -73,7 +76,7 @@ int latency = 0;           //ms
 bool randomInverseSticks = false;
 bool randomRocketVelocity = false;
 bool randomLatency = false;
-bool gameActive = false;
+bool gameActive = true;
 
 // coordinates of the rocket
 int coords[2];
@@ -89,6 +92,9 @@ enum Modes {
 };
 // defaulft mode
 Modes mode = PLAYER_MODE;
+
+// PID Settings
+  float error, integral ,derivative, previousError;
 
 void setup() {
   // dc motor entcoder
@@ -121,8 +127,13 @@ void setup() {
 void loop() {
   checkForInput();
   getCoords();
+  /*Serial.print(coords[0]) + Serial.println(coords[1]);
+    Serial.print("R: ");
+  Serial.println(posVR);
+    Serial.print("L: ");
+  Serial.println(posVL);*/
   blockCheck();
-  executemode(analogRead(joystickL), analogRead(joystickR));
+  executemode();
 }
 
 void checkForInput() {
@@ -143,12 +154,12 @@ void checkForInput() {
     } else if (input == "TRANSPORT") {
       mode = TRANSPORT_MODE;
       return;
-    } else if (input == "null") {
+    } else if (input == "null" || input == "reset") {
       mode = INITIALIZATION_MODE;
       return;
-    } else if (input == "reset") {
-      mode = INITIALIZATION_MODE;
-      return;
+    } else if (input == "play") {
+      Serial.println("play");
+      mode = PLAYER_MODE;
     }
 
     // Parse the input string
@@ -171,7 +182,7 @@ void checkForInput() {
   }
 }
 
-void executemode(int jValL, int jValR) {
+void executemode() {
   switch (mode) {
     case INITIALIZATION_MODE:
       findCoordOrigin();
@@ -180,13 +191,7 @@ void executemode(int jValL, int jValR) {
       transportMode();
       break;
     case PLAYER_MODE:
-      bool inverse = randomInverseSticks ? random(0, 2) : inverseSticks;
-      int speed = round((randomRocketVelocity ? random(0, 2) : rocketVelocity) * MAX_SPEED) * (inverse ? -1 : 1) * (gameActive ? 1 : 0);
-      int leftSpeed = (int)round(mapFloat(jValL, MIN_JVALL, MAX_JVALL, -speed, speed));
-      int rightSpeed = (int)round(mapFloat(jValR, MIN_JVALR, MAX_JVALR, -speed, speed));
-      int lat = randomLatency ? random(0, MAX_LATENCY) : latency;
-      delay(lat);
-      moveRocket(leftSpeed, rightSpeed);
+      playerMode();
       break;
     case ORIGIN_MODE:
       moveToStartPos();
@@ -197,6 +202,25 @@ void executemode(int jValL, int jValR) {
     case ERROR_MODE:
       break;
   }
+}
+
+void playerMode() {
+  // Read the joystick values and set the speed of the motors
+  bool inverse = randomInverseSticks ? random(0, 2) : inverseSticks;
+  float velocity = randomRocketVelocity ? random(0, 2) : rocketVelocity;
+  int baseSpeed = round(velocity * MAX_SPEED);
+  int adjustedSpeed = baseSpeed * (inverse ? -1 : 1) * (gameActive ? 1 : 0);
+
+  int joystickLValue = analogRead(joystickL);
+  int joystickRValue = analogRead(joystickR);
+
+  int leftSpeed = (int)round(mapFloat(joystickLValue, MIN_JVALL, MAX_JVALL, -adjustedSpeed, adjustedSpeed));
+  int rightSpeed = (int)round(mapFloat(joystickRValue, MIN_JVALR, MAX_JVALR, -adjustedSpeed, adjustedSpeed));
+
+  int latency = randomLatency ? random(0, MAX_LATENCY) : latency;
+
+  //delay(latency);
+  moveRocket(leftSpeed, rightSpeed);
 }
 
 void sendCoords() {
@@ -223,24 +247,27 @@ void blockCheck() {
 }
 
 void findCoordOrigin() {
-  int phase = 0;
-  while (phase < 4) {
-    switch (phase) {
-      case 0:
-        phase = approachOrigin(NULL_SPEED1, phase);
-        break;
-      case 1:
-        phase = distanceToOrigin(NULL_SPEED1, phase);
-        break;
-      case 2:
-        phase = approachOrigin(NULL_SPEED2, phase);
-        break;
-      case 3:
-        phase = distanceToOrigin(MAX_SPEED, phase);
-        break;
-    }
+  switch (phase) {
+    case 0:
+      phase = approachOrigin(NULL_SPEED1, phase);
+      Serial.println("1");
+      break;
+    case 1:
+      phase = distanceToOrigin(NULL_SPEED1, phase);
+      Serial.println("2");
+      break;
+    case 2:
+      phase = approachOrigin(NULL_SPEED2, phase);
+      Serial.println("3");
+      break;
+    case 3:
+      phase = distanceToOrigin(MAX_SPEED, phase);
+      Serial.println("4");
+    case 4:
+      Serial.print("rd");
+      mode = EJECT_MODE;
+      break;
   }
-  mode = ORIGIN_MODE;
 }
 
 void setMotorState(int in1, int in2, int en, int speed) {
@@ -248,7 +275,11 @@ void setMotorState(int in1, int in2, int en, int speed) {
   digitalWrite(in2, LOW);
   analogWrite(en, speed);
 }
+
 int approachOrigin(int speed, int phase) {
+  Serial.println("isnd");
+  Serial.println(nullLeft);
+  Serial.println(nullRight);
   if (!nullLeft) {
     setMotorState(IN1, IN2, ENL, speed);
   }
@@ -256,12 +287,14 @@ int approachOrigin(int speed, int phase) {
     setMotorState(IN3, IN4, ENR, speed);
   }
   if (nullLeft && nullRight) {
+    Serial.println("IFN");
     posVL = posVR = 0;
     phase++;
   }
   return phase;
 }
 int distanceToOrigin(int speed, int phase) {
+  /*
   if (posVL < 50) {
     setMotorState(IN2, IN1, ENL, speed);
   }
@@ -269,26 +302,71 @@ int distanceToOrigin(int speed, int phase) {
     setMotorState(IN4, IN3, ENR, speed);
     delay(2000);
   }
-  if (posVL < 50 && posVR < 50) {
-    stopMotors();
-    nullLeft = nullRight = false;
-    phase++;
-  }
+  */
+  setMotorState(IN2, IN1, ENL, speed);
+  setMotorState(IN4, IN3, ENR, speed);
+  delay(5000);
+  //if (posVL < 50 && posVR < 50) {
+  stopMotors();
+  nullLeft = nullRight = false;
+  phase++;
+  //}
   return phase;
 }
 
 void moveToEjectPos() {
-  //move rocket to the eject position
-  //to do: moving sequence
+  bool left = true;
+  int goalDistance = (FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2) + EJECT_POS[0]) ^ 2 + (FEED_THROUGH_OFFSETY + BOARD_HIGHT - EJECT_POS[1]) ^ 2;
+  int deltaLeft = posVL - goalDistance;
+  int deltaRight = posVR - goalDistance;
+  regulateSpeed(deltaLeft, left);
+  regulateSpeed(deltaRight, !left);
 }
 
 void moveToStartPos() {
-  //move rocket to the start position
-  //to do: moving sequence
+  bool left = true;
+  int goalDistance = (FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2)) ^ 2 + (FEED_THROUGH_OFFSETY + BOARD_HIGHT) ^ 2;
+  int deltaLeft = posVL - goalDistance;
+  int deltaRight = posVR - goalDistance;
+  if (posVL < RADIUS_TO_START)
+  {
+    setMotorState(IN2, IN1, ENL, MAX_SPEED);
+  }
+  regulateSpeed(deltaLeft, left);
+  regulateSpeed(deltaRight, !left);
+}
+
+void regulateSpeed(int delta, bool left) {
+  int speed = PIDController(delta);
+  if (delta > 0) {
+    if (left) {
+      setMotorState(IN1, IN2, ENL, speed);
+    } else {
+      setMotorState(IN3, IN4, ENR, speed);
+    }
+  } else if (delta < 0) {
+    if (left) {
+      setMotorState(IN2, IN1, ENL, speed);
+    } else {
+      setMotorState(IN4, IN3, ENR, speed);
+    }
+  } else {
+    if (left) {
+      setMotorState(IN1, IN2, ENL, 0);
+    } else {
+      setMotorState(IN3, IN4, ENR, 0);
+    }
+  }
 }
 
 float* calculateCoords(int distance, int left, int right) {
+  Serial.print("left: ");
+  Serial.println(left);
+  Serial.print("right: ");
+  Serial.println(right);
   float angle = (float)(left * distance) / (float)(left * left + right * right);
+  Serial.print("angle: ");
+  Serial.println(angle);
   coords[0] = round(left * angle);
   coords[1] = round(right * angle);
 }
@@ -332,20 +410,23 @@ void moveRocket(int leftSpeed, int rightSpeed) {
   }
 
   // catch if rocket is at boarder and set the speed of the motors
+  /*
   if ((dirL && blockLeftPos) || (!dirL && blockLeftNeg)) {
     digitalWrite(IN1, false);
     digitalWrite(IN2, false);
     analogWrite(ENL, 0);
+    Serial.println("OSDKJ");
   } else {
-    analogWrite(ENL, abs(leftSpeed));
-  }
+    */
+  analogWrite(ENL, abs(leftSpeed));
+  /*}
   if ((dirR && blockRightPos) || (!dirR && blockRightNeg)) {
     digitalWrite(IN3, false);
     digitalWrite(IN4, false);
     analogWrite(ENR, 0);
-  } else {
-    analogWrite(ENR, abs(rightSpeed));
-  }
+  } else {*/
+  analogWrite(ENR, abs(rightSpeed));
+  //}
 }
 
 void transportMode() {
@@ -361,11 +442,6 @@ void readEncoderL() {
   } else {
     posVL--;
   }
-  /*  
-  posVL += (x > 0) ? 1 : -1;
-  Serial.print("L: ");
-  Serial.println(posVL);
-  */
 }
 
 void readEncoderR() {
@@ -375,7 +451,6 @@ void readEncoderR() {
   } else {
     posVR--;
   }
-  //  posVR += (x > 0) ? 1 : -1;
 }
 
 void readLimitSwitchL() {
@@ -388,6 +463,7 @@ void readLimitSwitchL() {
     nullLeft = true;
   }
 }
+
 void readLimitSwitchR() {
   stopMotors();
   if (mode != INITIALIZATION_MODE) {
@@ -398,6 +474,7 @@ void readLimitSwitchR() {
     nullRight = true;
   }
 }
+
 void stopMotors() {
   digitalWrite(IN1, false);
   digitalWrite(IN2, false);
@@ -407,4 +484,18 @@ void stopMotors() {
 
 float mapFloat(long x, long in_min, long in_max, long out_min, long out_max) {
   return (float)(x - in_min) * (out_max - out_min) / (float)(in_max - in_min) + out_min;
+}
+
+int PIDController(float delta) {
+  float Kp = 1.0;                     // Proportional gain
+  float Ki = 0.0;                     // Integral gain
+  float Kd = 0.0;                     // Derivative gain
+  float maxSpeed = (float)MAX_SPEED;  // Maximum speed for the motors
+  error = delta;
+  integral += error;
+  derivative = error - previousError;
+  int speed = Kp * error + Ki * integral + Kd * derivative;
+  speed = constrain(abs(speed), 0, maxSpeed);  // Begrenze die Geschwindigkeit auf maxSpeed
+  previousError = error;
+  return speed;
 }
