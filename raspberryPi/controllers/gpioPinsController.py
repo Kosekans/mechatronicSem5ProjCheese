@@ -65,7 +65,6 @@ class GpioPinsController(QObject):
             GPIO.setup(self.START_BUTTON_LED_PIN, GPIO.OUT)
 
             # Add event detection for START_BUTTON_PIN
-            GPIO.remove_event_detect(self.START_BUTTON_PIN)
             GPIO.add_event_detect(self.START_BUTTON_PIN, GPIO.FALLING, callback=self.startgame, bouncetime=200)
             GPIO.add_event_detect(self.BALL_FALLING_PIN, GPIO.FALLING, callback=self.lostball, bouncetime=200)
             GPIO.add_event_detect(self.BALL_FALLING_PIN, GPIO.RISING, callback=self.balldetected, bouncetime=200)

@@ -12,8 +12,15 @@ class HelperFunctions:
 
     @staticmethod
     def is_raspberry_pi():
-    #Check if running on Raspberry Pi
-        return platform.system() == "Linux" and os.uname().nodename == RASPBERRY_PI_SETTINGS['OS_USERNAME']
+        # Check if running on Raspberry Pi
+        if platform.system() != "Linux":
+            return False
+        try:
+            with open('/proc/device-tree/model') as model_file:
+                model = model_file.read().lower()
+                return 'raspberry pi' in model
+        except FileNotFoundError:
+            return False
 
     @staticmethod
     def createGoalCoords():
