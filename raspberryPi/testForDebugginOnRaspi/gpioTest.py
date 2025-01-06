@@ -17,24 +17,28 @@ sys.path.append(parent_dir)
 from config.settings import RASPBERRY_PI_SETTINGS
 
 class GpioPinsController(QObject):
-    START_BUTTON_LED_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['START_BUTTON_LED_PIN']  # GPIO22 physical pin 15
+    START_BUTTON_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['START_BUTTON_PIN']  # GPIO22 physical pin 15
     
     def __init__(self):
         super().__init__()
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.START_BUTTON_LED_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         self.setupGPIO()
     
     def setupGPIO(self):
-        GPIO.add_event_detect(self.START_BUTTON_LED_PIN, GPIO.FALLING, callback=self.startgame, bouncetime=200)
+        GPIO.add_event_detect(self.START_BUTTON_PIN, GPIO.FALLING, callback=self.startgame, bouncetime=200)
     
     def cleanup(self):
         GPIO.cleanup()
 
     def startgame(self, channel):
         """when the physical start button is pressed, print 'Start'"""
-        print("Start button pressed")
-        print(f"GPIO pin state: {GPIO.input(self.START_BUTTON_LED_PIN)}")
+        try:
+            input_state = GPIO.input(self.START_BUTTON_PIN)
+            if input_state == GPIO.LOW:
+                print("Button pressed")
+        finally:
+            GPIO.cleanup()
 
 if __name__ == "__main__":
     controller = GpioPinsController()
