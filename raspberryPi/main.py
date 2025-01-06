@@ -9,8 +9,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QWindow
 import sys
 import os
-from PyQt5.QtCore import QTimer
-from pathlib import Path
 
 def main():
     try:
@@ -48,11 +46,6 @@ def main():
         print("initialized component InputController")
         gameController = GameController(gameState, viewManager, arduinoController, gpioPinsController)
         print("initialized component GameController")
-
-        # Create a timer to check GPIO status periodically
-        gpio_timer = QTimer()
-        gpio_timer.timeout.connect(lambda: print(f"GPIO pin state: {GPIO.input(gpioPinsController.START_BUTTON_PIN)}"))
-        gpio_timer.start(1000)  # Check every second
 
         # Force fullscreen and disable window controls
         for widget in app.topLevelWidgets():
