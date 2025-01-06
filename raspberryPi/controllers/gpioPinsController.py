@@ -32,13 +32,13 @@ class GpioPinsController(QObject):
     Inherits from QObject to enable Qt's signal/slot mechanism.
     """
     # Signal emitted when button is pressed, carries button identifier
-    buttonClicked = pyqtSignal(str)
+    gpioInputEvent = pyqtSignal(str)
     
     # Pin number definitions - using BCM numbering
-    START_BUTTON_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['START_BUTTON_PIN']
-    BALL_FALLING_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['BALL_FALLING_PIN']
-    BALL_EJECT_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['BALL_EJECT_PIN']
-    pins = [START_BUTTON_PIN, BALL_FALLING_PIN, BALL_EJECT_PIN]
+    BALL_EJECT_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['BALL_EJECT_PIN']  # GPIO27 physical pin 13
+    BALL_FALLING_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['BALL_FALLING_PIN']  # GPIO18 physical pin 12
+    START_BUTTON_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['START_BUTTON_PIN']  # GPIO17 physical pin 11
+    START_BUTTON_LED_PIN = RASPBERRY_PI_SETTINGS['GPIO_PINS']['START_BUTTON_LED_PIN']  # GPIO22 physical pin 15
     
     def __init__(self):
         """Initialize controller and setup GPIO configurations"""
@@ -58,112 +58,66 @@ class GpioPinsController(QObject):
         try:
             GPIO.setmode(GPIO.BCM)
             GPIO.setwarnings(False)
-            GPIO.setup(BALL_EJECT_PIN, GPIO.OUT)
-            GPIO.setup(BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set up pin as input with pull-up resistor
-            GPIO.setup(START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set up pin as input with pull-up resistor
-            GPIO.setup(START_BUTTON_LED_PIN, GPIO.OUT)
+            GPIO.setup(self.BALL_EJECT_PIN, GPIO.OUT)
+            GPIO.setup(self.BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set up pin as input with pull-up resistor
+            GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set up pin as input with pull-up resistor
+            GPIO.setup(self.START_BUTTON_LED_PIN, GPIO.OUT)
 
-            for pin in self.pins:
-                GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                # Handle both edges for more reliable detection
-                GPIO.add_event_detect(
-                    pin,
-                    GPIO.BOTH,  # Detect both RISING and FALLING edges
-                    callback=self._edge_callback,
-                    bouncetime=20  # Reduced for better responsiveness
-                )
         except Exception as e:
             print(f"GPIO Setup failed: {e}")
-    
-    def _edge_callback(self, channel):
-        """Low-level interrupt callback with debouncing and edge detection"""
-        import time
-        current_tick = time.time() * 1000  # Get current time in ms
-        
-        # Software debouncing with time checking
-        if (current_tick - self._last_tick[channel]) <= 20:  # 20ms debounce
-            return
-            
-        self._last_tick[channel] = current_tick
-        
-        # Read actual pin state
-        state = not GPIO.input(channel)  # Inverted because of pull-up
-        if state == self._input_state[channel]:  # Ignore if state hasn't changed
-            return
-            
-        self._input_state[channel] = state
-        
-        # Only trigger on button press (False->True transition)
-        if state:
-            self.inputCallback(channel)
-    
-    def inputCallback(self, channel):
-        """
-        Callback triggered by button press.
-        Emits buttonClicked signal with "startGame" identifier.
-        """
-        if channel == self.START_BUTTON_PIN:
-            self.buttonClicked.emit(self.START_BUTTON_PIN)
-        if channel == self.BALL_FALLING_PIN:
-            self.buttonClicked.emit(self.BALL_FALLING_PIN)
-        if channel == self.BALL_EJECT_PIN:
-            self.buttonClicked.emit(self.BALL_EJECT_PIN)
     
     def cleanup(self):
         GPIO.cleanup()
 
     def connectSignals(self, controller) -> None:
-        self.buttonClicked.connect(controller.handleButtonClicked)
+        self.gpioInputEvent.connect(controller.handleGpioInput)
 
-    def
-    @pyqtSlot(str)
-    def onButtonClick(self, button_id: str) -> None:
-        self.buttonClicked.emit(button_id)
-
+    @pyqtSlot()
     def ejectball(self):
-        p = GPIO.PWM(BALL_EJECT_PIN, 50) # GPIO 17 als PWM mit 50Hz
+        p = GPIO.PWM(self.BALL_EJECT_PIN, 50) # GPIO 17 als PWM mit 50Hz
         p.start(2.5) # Initialisierung
         try:
             # Rotate to 180 degrees
             p.ChangeDutyCycle(12.5)
-            print("Ejecting ball")
             time.sleep(5)  # Wait for 5 seconds
             # Return to the starting position (0 degrees)
             p.ChangeDutyCycle(2.5)
         finally:
-            print("Servo in starting position")
             p.stop()
-            GPIO.cleanup()
+            self.cleanup()
 
+    @pyqtSlot()
     def lostball(self):
         try:
-            input_state = GPIO.input(BALL_FALLING_PIN)
+            input_state = GPIO.input(self.BALL_FALLING_PIN)
             if input_state == GPIO.LOW:
-                print("Ball falling detected")
+                self.gpioInputEvent.emit("Ball lost")
         finally:
-            GPIO.cleanup()
+            self.cleanup()
 
+    @pyqtSlot()
     def balldetected(self):
         try:
-            input_state = GPIO.input(BALL_FALLING_PIN)
+            input_state = GPIO.input(self.BALL_FALLING_PIN)
             if input_state == GPIO.HIGH:
-                print("Ball detected")
+                self.gpioInputEvent.emit("Ball detected")
         finally:
-            GPIO.cleanup()
+            self.cleanup()
 
+    @pyqtSlot()
     def startgame(self):
         try:
-            input_state = GPIO.input(START_BUTTON_PIN)
+            input_state = GPIO.input(self.START_BUTTON_PIN)
             if input_state == GPIO.LOW:
-                print("Button pressed")
+                self.gpioInputEvent.emit("Start")
         finally:
-            GPIO.cleanup()    
+            self.cleanup()
 
     def blinkStartButtonLed(self):
         while True:
             try:
-                GPIO.output(START_BUTTON_LED_PIN, GPIO.HIGH)
+                GPIO.output(self.START_BUTTON_LED_PIN, GPIO.HIGH)
                 time.sleep(1)
-                GPIO.output(START_BUTTON_LED_PIN, GPIO.LOW)
+                GPIO.output(self.START_BUTTON_LED_PIN, GPIO.LOW)
             finally:
-                GPIO.cleanup()
+                self.cleanup()

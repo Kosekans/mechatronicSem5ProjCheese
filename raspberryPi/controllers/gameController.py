@@ -47,22 +47,25 @@ class GameController(QObject):
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass#todo
      
-    def handleGpioInput(self, pin: int):
+    def handleGpioInput(self, event: str):
         #Dictionary to map button IDs to their corresponding methods
         pin_actions = {
-            self.gpioPinsController.START_BUTTON_PIN: self.clickStartGame,
-            self.gpioPinsController.BALL_FALLING_PIN: self.triggerBallFallingSensor,
-            self.gpioPinsController.BALL_EJECT_PIN: self.triggerBallEjector
+            'Start': self.clickStartGame,
+            'Ball lost': self.setBallInRocket(False),
+            'Ball detected': self.setBallInRocket(True)
         }
         
         # Call the corresponding method if pin exists
-        action = pin_actions.get(pin)
+        action = pin_actions.get(event)
         if action:
             try:
                 action()
             except Exception as e:
                 # Show error to user through ViewManager
                 self.viewManager.showWarning(str(e))
+     
+    def setBallInRocket(self, value: bool):
+        self.gameState.ballInRocket = value
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
