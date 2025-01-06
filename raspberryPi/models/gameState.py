@@ -11,20 +11,6 @@ from config.settings import GAME_SETTINGS
 
 class GameState:
     def __init__(self):
-        self.portsFound
-        self.hardwareInitialized
-        self.active
-        self.chaesAntriebCoords
-        self.chaesAntriebModus
-        self.goalCoords
-        self.goalCoordsVelo
-        self.gameMode
-        self.inverseSticks
-        self.rocketVelocity
-        self.latency
-        self.randomInverseSticks
-        self.randomRocketVelocity
-        self.randomLatency
         self.reset
         
     def reset(self):
