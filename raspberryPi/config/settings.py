@@ -19,10 +19,10 @@ ARDUINO_SETTINGS = {
 
 RASPBERRY_PI_SETTINGS = {
     'GPIO_PINS': {
-        'START_BUTTON_PIN': 27, # GPIO27 physical pin 13
+        'START_BUTTON_PIN': 22, # GPIO27 physical pin 15
         'BALL_FALLING_PIN': 18, # GPIO18 physical pin 12
         'BALL_EJECT_PIN': 12, # GPIO27 physical pin 32
-        'START_BUTTON_LED_PIN': 22 # GPIO22 physical pin 15
+        'START_BUTTON_LED_PIN': 27 # GPIO22 physical pin 13
     },
     'OS_USERNAME': 'chaes'
 }

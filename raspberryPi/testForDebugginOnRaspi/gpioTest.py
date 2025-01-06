@@ -33,12 +33,8 @@ class GpioPinsController(QObject):
 
     def startgame(self, channel):
         """when the physical start button is pressed, print 'Start'"""
-        try:
-            input_state = GPIO.input(self.START_BUTTON_PIN)
-            if input_state == GPIO.LOW:
-                print("Button pressed")
-        finally:
-            GPIO.cleanup()
+        print("Start button pressed")
+        print(f"GPIO pin state: {GPIO.input(self.START_BUTTON_PIN)}")
 
 if __name__ == "__main__":
     controller = GpioPinsController()
