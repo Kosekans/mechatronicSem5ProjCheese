@@ -64,7 +64,6 @@ class GameController(QObject):
             try:
                 action()
             except Exception as e:
-                print(f"Error handling GPIO input: {e}") # Add debug print
                 self.viewManager.showWarning(str(e))
      
     def setBallInRocket(self, value: bool):
@@ -77,11 +76,11 @@ class GameController(QObject):
         while self.arduinoController.getAntrieb != "DONE": #todo in arduino code
             pass
         '''
-        self.arduinoController.sendMode("EJECTPOS")
+        self.arduinoController.sendAntrieb("EJECTPOS")
         while self.gameState.ballInRocket == False:
             pass
         #to do, wait for signal ball in rockets
-        self.arduinoController.sendMode("STARTPOS")
+        self.arduinoController.sendAntrieb("STARTPOS")
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
