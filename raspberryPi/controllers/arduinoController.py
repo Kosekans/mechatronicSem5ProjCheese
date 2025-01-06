@@ -49,11 +49,14 @@ class ArduinoController:
             self.connected = False
             return False
     
-    def sendMode(self, x: str):
+    def sendAntrieb(self, x: str):
         self.arduinoAntrieb.writeSerial(x)
 
-    def sendCoords(self, x: str):
+    def sendZiel(self, x: str):
         self.arduinoZielsystem.writeSerial(x)
 
-    def getPos(self):
+    def getAntrieb(self):
         return self.arduinoAntrieb.readSerialLine()
+    
+    def getZiel(self):
+        return self.arduinoZielsystem.readSerialLine()

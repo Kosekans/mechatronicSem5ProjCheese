@@ -57,5 +57,6 @@ ERROR_MESSAGES = {
     'NO_PORTS_FOUND': 'No connected ports found, update the ports in settings',
     'NO_INTERNET_CONNECTION': 'No internet connection found, could not update repository. Check the connection and retart to update',
     'UPDATE_FAILED': 'Failed to update repository',
+    'RUNNING_GAME': 'Game is already running',
     'SUCCESS': 'passt scho, het klappt'
 }
