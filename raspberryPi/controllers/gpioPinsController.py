@@ -59,9 +59,15 @@ class GpioPinsController(QObject):
             GPIO.setmode(GPIO.BCM)
             GPIO.setwarnings(False)
             GPIO.setup(self.BALL_EJECT_PIN, GPIO.OUT)
-            GPIO.setup(self.BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set up pin as input with pull-up resistor
-            GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Set up pin as input with pull-up resistor
+            GPIO.setup(self.BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.setup(self.START_BUTTON_LED_PIN, GPIO.OUT)
+
+            # Add event detection for START_BUTTON_PIN
+            GPIO.add_event_detect(self.START_BUTTON_PIN, 
+                                GPIO.FALLING, 
+                                callback=self._button_callback,
+                                bouncetime=300)
 
         except Exception as e:
             print(f"GPIO Setup failed: {e}")
@@ -71,6 +77,21 @@ class GpioPinsController(QObject):
 
     def connectSignals(self, controller) -> None:
         self.gpioInputEvent.connect(controller.handleGpioInput)
+    
+    def _button_callback(self, channel):
+        """Callback function for button press"""
+        if channel == self.START_BUTTON_PIN:
+            self.gpioInputEvent.emit("Start")
+
+    # Remove @pyqtSlot decorator and modify startgame
+    def startgame(self):
+        """Manual trigger for start game event"""
+        try:
+            input_state = GPIO.input(self.START_BUTTON_PIN)
+            if input_state == GPIO.LOW:
+                self.gpioInputEvent.emit("Start")
+        except:
+            pass
 
     def ejectball(self):
         p = GPIO.PWM(self.BALL_EJECT_PIN, 50) # GPIO 17 als PWM mit 50Hz
@@ -100,15 +121,6 @@ class GpioPinsController(QObject):
             input_state = GPIO.input(self.BALL_FALLING_PIN)
             if input_state == GPIO.HIGH:
                 self.gpioInputEvent.emit("Ball detected")
-        finally:
-            self.cleanup()
-
-    @pyqtSlot()
-    def startgame(self):
-        try:
-            input_state = GPIO.input(self.START_BUTTON_PIN)
-            if input_state == GPIO.LOW:
-                self.gpioInputEvent.emit("Start")
         finally:
             self.cleanup()
 
