@@ -78,6 +78,7 @@ class GpioPinsController(QObject):
     @pyqtSlot()
     def startgame(self):
         """Manual trigger for start game event"""
+        print("Start button pressed")
         self.gpioInputEvent.emit("Start")
 
     def ejectball(self):

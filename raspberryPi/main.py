@@ -64,7 +64,7 @@ def main():
         viewManager.connectSignals(gameController)
         print("connected viewManager signals to gameController")
         gpioPinsController.connectSignals(gameController)
-        print("connected inputController signals to gameController")
+        print("connected gpioPinsController signals to gameController")
         
         # Start application
         sys.exit(app.exec_())
