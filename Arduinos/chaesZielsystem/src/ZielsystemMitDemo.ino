@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <FireTimer.h>
 #include <ArmCalculator.h>
 #include <Servo.h>
@@ -19,7 +18,7 @@ int angleIncrement = 10; // Increment in PWM
 int currentX; // Does this actually have to be a global variable?
 int currentY;
 
-int velocity;
+int velocity; // in mm/s. This is a pseudo velocity as it does not take in to a account the actual path but rather the hypothenuse between two points
 
 int targetX;
 int targetY;
@@ -27,8 +26,10 @@ int targetY;
 bool targetChanged = true; // Has to be true to trigger the calculations for the first time.
 
 int mode; // holds the current Mode. This is partially set by the serial input
-// e.g. 1 = STOP, 2 = ORIGIN, 3 = TRAVEL, 4 = TRANSPORT, 5 = IDLE 
+// e.g. 1 = STOP, 2 = ORIGIN, 3 = TRAVEL, 4 = TRANSPORT, 5 = IDLE, 6 = DEMO
 
+bool demoEnabled = false;
+ 
 // Objects
 ArmCalculator calculator;
 
@@ -38,20 +39,18 @@ Servo servoPlus;
 FireTimer intervalServoMinus;
 FireTimer intervalServoPlus;
 
-int i;
-
 void setup(){
 
+  pinMode(12, OUTPUT); // Relais Pin
+  digitalWrite(12, HIGH); // Turn off Power to Servos
+
   Serial.begin(9600);
-  Serial.setTimeout(10);
 
   servoMinus.attach(9, 500, 2500);
   servoPlus.attach(10, 500, 2500);
 
-  // implement servo write last known servo positions from EEPROM soon. For now:
-
-  currentX = 0;
-  currentY = 300;
+  currentX = 200;
+  currentY = 200;
 
   currentAngleMinus = calculator.angleForPosition(currentX, currentY, "Minus");
   currentAnglePlus = calculator.angleForPosition(currentX, currentY, "Plus");
@@ -66,51 +65,29 @@ void setup(){
   servoPlus.writeMicroseconds(currentAnglePlus);
 
   origin();
-  i = 0;
+  digitalWrite(12, LOW); // Enable Power to Servos
 }
 
 void loop(){
-	checkForInput();/*
+	checkForInput();
 	if (targetChanged) {
 		calculate();
 		targetChanged = false;
 	}
-	drive();*/
-}
-
-void setCoordinates(){
-  int coordinateArryX [4] = {0, 220, -220, 200};
-  int coordinateArryY [4] = {400, 300, 400, 600};
-  
-  if (currentX != coordinateArryX[i]){
-    targetX = coordinateArryX[i];
-    targetY = coordinateArryY[i];
-    targetChanged = true;
-  }
-
-  if (currentX == targetX){
-    i++;
-  }
-
-  if(i == 4){
-    i = 0;
-  }
-  
-
+	drive();
 }
 
 void checkForInput() {
 	// Basically just a SerialRead Function which looks for the following inputs:
 	// STOP: Halt the Arms exactly where they are
 	// ORIGIN: Set the Arms to the starting position
-	// x/y/v: Coordinates, seperated by a slash. Set them as new Target coordinates. This part should also test if the coordinates are 'legal'
-	// trans: Set the TransportMode
+	// x/y: Coordinates, seperated by a slash. Set them as new Target coordinates. This part should also test if the coordinates are 'legal'
+	// TRANS: Set the TransportMode
+
   if (Serial.available() > 0) {
-    String input = Serial.readStringUntil('\n');
-    if (input == "ID") {
-      Serial.println("chaesZielsystem");
-      return;
-    }
+    String input = Serial.readStringUntil('\n');  // Read input until newline
+    input.trim();  // Remove any whitespace
+
     // Check if input is in x/y or x/y/velocity format
     int firstSlash = input.indexOf('/');
     int secondSlash = input.indexOf('/', firstSlash + 1);
@@ -158,7 +135,7 @@ void checkForInput() {
       mode = 2;
       targetChanged = true;
     } 
-    else if (input == "trans") {
+    else if (input == "TRANS") {
       mode = 4; // Transport Mode
     } else if (input == "INFO") {
       Serial.print("targetAnglePlus: ");
@@ -181,9 +158,12 @@ void checkForInput() {
       Serial.println(mode);
       Serial.println("Info: 1 = STOP, 2 = ORIGIN, 3 = TRAVEL, 4 = TRANSPORT, 5 = IDLE");
       Serial.println("");
-    }  
+    } else if(input == "DEMO") {
+      demoEnabled = true;
+      mode = 6;
+    } 
     else {
-      //Serial.println("Error: Unknown command");
+      Serial.println("Error: Unknown command");
     }
   }
 }
@@ -191,7 +171,7 @@ void checkForInput() {
 // Function to validate coordinates
 bool isLegalCoordinate(int x, int y) {
     // Replace these with the actual valid ranges for x and y
-    int minX = -250, maxX = 250;
+    int minX = -255, maxX = 255;
     int minY = 200, maxY = 600;
 
     bool xValid = (x >= minX && x <= maxX);
@@ -205,16 +185,15 @@ bool isLegalCoordinate(int x, int y) {
     return (x >= minX && x <= maxX) && (y >= minY && y <= maxY);
 }
 
-
 void drive(){
 	switch (mode) {
 		case 1:
 			// STOP
-      servoMinus.writeMicroseconds(currentAngleMinus);
-      servoPlus.writeMicroseconds(currentAnglePlus);
+      stop();
 			break;
 		case 2: 
 			// origin
+      origin();
 			break;
 		case 3:
 			// TRAVEL
@@ -222,23 +201,59 @@ void drive(){
 			break;
 		case 4:
 			// transport
+      transport();
 			break;
 		case 5:
 			// IDLE
+      if (demoEnabled){
+        mode = 6;
+      }
 			break;
+    case 6: 
+      // DEMO IDLE FUNCTION
+      demo();
+      break;
   }
 }
 
 void stop() {
 	// Write the current PWM to the Servo and dont update the variable
+  demoEnabled = false;
+  servoMinus.writeMicroseconds(currentAngleMinus);
+  servoPlus.writeMicroseconds(currentAnglePlus);
+  //getCurrentXandY(); // This does not yet work, but it is not important as it would not make a noticeable difference either way.
 }
 
 void origin(){
 	// Go to the Origin with a predefined speed. Once there, set mode to IDLE
 	// To decide: Should this action be haltable? Yes i think so. Maybe only through emergency halt and not through the input of new variables though.
+  demoEnabled = false;
   targetX = 0;
   targetY = 400;
   velocity = 300;
+  targetChanged = true;
+
+  mode = 3;
+}
+
+void transport(){
+
+  demoEnabled = false;
+
+  targetX = 200;
+  targetY = 200;
+  velocity = 300;
+  targetChanged = true;
+
+  mode = 3;
+}
+
+void demo(){
+  targetX = random(-200, 200);
+  targetY = random(200, 600);
+
+  velocity = 200;
+
   targetChanged = true;
 
   mode = 3;
@@ -293,7 +308,6 @@ int newPWM(bool direction, int targetPWM, int currentPWM){
   //debugInt("newPWM: ", newPWM);
   return newPWM;
 }
-
 
 void calculate() {
 	// Do all the calculations. This means take in the current and target coordinates. Calculate the required PWM signals for those coordinates.
@@ -351,4 +365,16 @@ void calculate() {
 void debugInt(String message, int value){
   Serial.print(message);
   Serial.println(value);
+}
+
+void getCurrentXandY(){
+  // THIS RETURNS INCORRECT VALUES
+  float a1 = calculator.getAngleFromPWM(currentAnglePlus, "Plus");
+  debugInt("a1: ", a1);
+  float a2 = calculator.getAngleFromPWM(currentAngleMinus, "Minus");
+  debugInt("a2: ", a2);
+  currentX = calculator.getX(a1, a2);
+  currentY = calculator.getY(a1, a2);
+  debugInt("X: ", currentX);
+  debugInt("Y: ", currentY);
 }
