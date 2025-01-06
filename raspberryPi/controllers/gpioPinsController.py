@@ -42,10 +42,8 @@ class GpioPinsController(QObject):
     
     def __init__(self):
         """Initialize controller and setup GPIO configurations"""
-        super().__init__()  # Initialize QObject parent
-        self._last_tick = {self.START_BUTTON_PIN: 0, self.BALL_FALLING_PIN: 0, self.BALL_EJECT_PIN: 0}
-        self._input_state = {self.START_BUTTON_PIN: False, self.BALL_FALLING_PIN: False, self.BALL_EJECT_PIN: False}
-        self.setupGPIO()  # Fix: Call correct method name
+        super().__init__()
+        self.setupGPIO()
         
     def setupGPIO(self):
         """
@@ -57,17 +55,16 @@ class GpioPinsController(QObject):
             
         try:
             GPIO.setmode(GPIO.BCM)
-            GPIO.setwarnings(False)
+            GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.setup(self.BALL_EJECT_PIN, GPIO.OUT)
             GPIO.setup(self.BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
             GPIO.setup(self.START_BUTTON_LED_PIN, GPIO.OUT)
 
             # Add event detection for START_BUTTON_PIN
-            GPIO.add_event_detect(self.START_BUTTON_PIN, 
-                                GPIO.FALLING, 
-                                callback=self._button_callback,
-                                bouncetime=300)
+            GPIO.add_event_detect(self.START_BUTTON_PIN, GPIO.FALLING, callback=self.startgame, bouncetime=200)
+            GPIO.add_event_detect(self.BALL_FALLING_PIN, GPIO.FALLING, callback=self.lostball, bouncetime=200)
+            GPIO.add_event_detect(self.BALL_FALLING_PIN, GPIO.RISING, callback=self.balldetected, bouncetime=200)
+
 
         except Exception as e:
             print(f"GPIO Setup failed: {e}")
@@ -77,21 +74,11 @@ class GpioPinsController(QObject):
 
     def connectSignals(self, controller) -> None:
         self.gpioInputEvent.connect(controller.handleGpioInput)
-    
-    def _button_callback(self, channel):
-        """Callback function for button press"""
-        if channel == self.START_BUTTON_PIN:
-            self.gpioInputEvent.emit("Start")
 
-    # Remove @pyqtSlot decorator and modify startgame
+    @pyqtSlot()
     def startgame(self):
         """Manual trigger for start game event"""
-        try:
-            input_state = GPIO.input(self.START_BUTTON_PIN)
-            if input_state == GPIO.LOW:
-                self.gpioInputEvent.emit("Start")
-        except:
-            pass
+        self.gpioInputEvent.emit("Start")
 
     def ejectball(self):
         p = GPIO.PWM(self.BALL_EJECT_PIN, 50) # GPIO 17 als PWM mit 50Hz
@@ -108,21 +95,11 @@ class GpioPinsController(QObject):
 
     @pyqtSlot()
     def lostball(self):
-        try:
-            input_state = GPIO.input(self.BALL_FALLING_PIN)
-            if input_state == GPIO.LOW:
-                self.gpioInputEvent.emit("Ball lost")
-        finally:
-            self.cleanup()
+        self.gpioInputEvent.emit("Ball lost")
 
     @pyqtSlot()
     def balldetected(self):
-        try:
-            input_state = GPIO.input(self.BALL_FALLING_PIN)
-            if input_state == GPIO.HIGH:
-                self.gpioInputEvent.emit("Ball detected")
-        finally:
-            self.cleanup()
+        self.gpioInputEvent.emit("Ball detected")
 
     def blinkStartButtonLed(self):
         while True:
