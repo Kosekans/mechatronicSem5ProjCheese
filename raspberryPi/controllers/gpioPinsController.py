@@ -42,6 +42,7 @@ class GpioPinsController(QObject):
     
     def __init__(self):
         """Initialize controller and setup GPIO configurations"""
+        print("is raspberry pi: ", isRaspberryPi)
         super().__init__()
         self.setupGPIO()
         print("GPIO setup completed")
