@@ -65,7 +65,6 @@ void setup(){
   servoPlus.writeMicroseconds(currentAnglePlus);
 
   origin();
-  i = 0;
   digitalWrite(12, LOW); // Enable Power to Servos
 }
 
