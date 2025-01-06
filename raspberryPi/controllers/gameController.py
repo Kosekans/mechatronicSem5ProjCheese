@@ -23,7 +23,6 @@ class GameController(QObject):
         self.viewManager = viewManager
         self.arduinoController = arduinoController
         self.gpioPinsController = gpioPinsController
-        self.gpioPinsController.buttonClicked.connect(self.handleButtonClicked)
         
         # Initialize hardware state
         self.gameState.portsFound = False
@@ -126,12 +125,6 @@ class GameController(QObject):
         else:
             self.gameState.hardwareInitialized = True
             raise ValueError(ERROR_MESSAGES['SUCCESS'])
-
-    def triggerBallFallingSensor(self):
-        pass
-
-    def triggerBallEjector(self):
-        pass
 
     def handleCheckboxChanged(self, checkbox_id: str, is_checked: bool):
         """Handle checkbox state changes from the settings view."""
