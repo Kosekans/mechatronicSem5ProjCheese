@@ -72,7 +72,6 @@ class GpioPinsController(QObject):
     def connectSignals(self, controller) -> None:
         self.gpioInputEvent.connect(controller.handleGpioInput)
 
-    @pyqtSlot()
     def ejectball(self):
         p = GPIO.PWM(self.BALL_EJECT_PIN, 50) # GPIO 17 als PWM mit 50Hz
         p.start(2.5) # Initialisierung
