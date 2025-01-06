@@ -26,14 +26,15 @@ class GpioPinsController(QObject):
         self.setupGPIO()
     
     def setupGPIO(self):
-        GPIO.add_event_detect(self.START_BUTTON_LED_PIN, GPIO.FALLING, callback=self.startgame, bouncetime=300)
+        GPIO.add_event_detect(self.START_BUTTON_LED_PIN, GPIO.FALLING, callback=self.startgame, bouncetime=200)
     
     def cleanup(self):
         GPIO.cleanup()
 
     def startgame(self, channel):
         """when the physical start button is pressed, print 'Start'"""
-        print("Start")
+        print("Start button pressed")
+        print(f"GPIO pin state: {GPIO.input(self.START_BUTTON_LED_PIN)}")
 
 if __name__ == "__main__":
     controller = GpioPinsController()
