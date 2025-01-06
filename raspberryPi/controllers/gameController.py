@@ -69,6 +69,14 @@ class GameController(QObject):
      
     def setBallInRocket(self, value: bool):
         self.gameState.ballInRocket = value
+            pass
+            
+
+    def prepareRocket(self):
+        self.arduinoController.sendMode(self.gameState.getInfoForAntrieb)
+        self.arduinoController.sendMode("EJECTPOS")
+        #to do, wait for signal ball in rockets
+        self.arduinoController.sendMode("STARTPOS")
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
