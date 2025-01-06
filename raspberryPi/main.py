@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QWindow
 import sys
 import os
+from PyQt5.QtCore import QTimer
 from pathlib import Path
 
 def main():
@@ -48,6 +49,11 @@ def main():
         gameController = GameController(gameState, viewManager, arduinoController, gpioPinsController)
         print("initialized component GameController")
 
+        # Create a timer to check GPIO status periodically
+        gpio_timer = QTimer()
+        gpio_timer.timeout.connect(lambda: print(f"GPIO pin state: {GPIO.input(gpioPinsController.START_BUTTON_PIN)}"))
+        gpio_timer.start(1000)  # Check every second
+
         # Force fullscreen and disable window controls
         for widget in app.topLevelWidgets():
             widget.setWindowFlags(
@@ -61,15 +67,10 @@ def main():
             widget.closeEvent = lambda event: event.ignore()
 
         # Connect signals/slots after all components exist
-        print("Connecting view signals...")
         viewManager.connectSignals(gameController)
         print("View signals connected")
-        
-        print("Connecting GPIO signals...")
         gpioPinsController.connectSignals(gameController) 
         print("GPIO signals connected")
-        
-        print("Starting application event loop...")
         
         # Start application
         sys.exit(app.exec_())

@@ -43,9 +43,10 @@ class GpioPinsController(QObject):
     def __init__(self):
         """Initialize controller and setup GPIO configurations"""
         super().__init__()
-        print("Initializing GpioPinsController...")
         self.setupGPIO()
         print("GPIO setup completed")
+        print(f"Current pin {self.START_BUTTON_PIN} state: {GPIO.input(self.START_BUTTON_PIN)}")
+
         
     def setupGPIO(self):
         """
@@ -56,25 +57,18 @@ class GpioPinsController(QObject):
             return
             
         try:
-            print("Setting up GPIO pins...")
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            print(f"START_BUTTON_PIN {self.START_BUTTON_PIN} configured")
             GPIO.setup(self.BALL_EJECT_PIN, GPIO.OUT)
-            print(f"BALL_EJECT_PIN {self.BALL_EJECT_PIN} configured")
             GPIO.setup(self.BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            print(f"BALL_FALLING_PIN {self.BALL_FALLING_PIN} configured")
             GPIO.setup(self.START_BUTTON_LED_PIN, GPIO.OUT)
-            print(f"START_BUTTON_LED_PIN {self.START_BUTTON_LED_PIN} configured")
 
             # Add event detection for START_BUTTON_PIN
+            GPIO.remove_event_detect(self.START_BUTTON_PIN)
             GPIO.add_event_detect(self.START_BUTTON_PIN, GPIO.FALLING, callback=self.startgame, bouncetime=200)
-            print("Event detection added for START_BUTTON_PIN")
             GPIO.add_event_detect(self.BALL_FALLING_PIN, GPIO.FALLING, callback=self.lostball, bouncetime=200)
-            print("Event falling detection added for BALL_FALLING_PIN")
             GPIO.add_event_detect(self.BALL_FALLING_PIN, GPIO.RISING, callback=self.balldetected, bouncetime=200)
-            print("Event rising detection added for BALL_FALLING_PIN")
-
+            print("GPIO event detection setup complete")
 
         except Exception as e:
             print(f"GPIO Setup failed: {e}")
@@ -93,9 +87,7 @@ class GpioPinsController(QObject):
     def startgame(self, channel):
         """Manual trigger for start game event"""
         print(f"GPIO: Button press detected on pin {channel}")
-        print("Emitting Start signal...")
         self.gpioInputEvent.emit("Start")
-        print("Signal emitted")
 
     def ejectball(self):
         p = GPIO.PWM(self.BALL_EJECT_PIN, 50) # GPIO 17 als PWM mit 50Hz
