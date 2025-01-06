@@ -50,7 +50,6 @@ class GameController(QObject):
         print(f"GameController received GPIO event: {event}") # Add debug print
         pin_actions = {
             'Start': self.clickStartGame,
-            'Test': lambda: print("gpioController test signal received"),
             'Ball lost': self.setBallInRocket(False),
             'Ball detected': self.setBallInRocket(True)
         }
@@ -58,9 +57,7 @@ class GameController(QObject):
         action = pin_actions.get(event)
         if action:
             try:
-                print(f"Executing action for {event}")
                 action()
-                print("Action completed")
             except Exception as e:
                 print(f"Error handling GPIO input: {e}") # Add debug print
                 self.viewManager.showWarning(str(e))

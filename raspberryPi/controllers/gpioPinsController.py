@@ -42,11 +42,8 @@ class GpioPinsController(QObject):
     
     def __init__(self):
         """Initialize controller and setup GPIO configurations"""
-        print("is raspberry pi: ", isRaspberryPi)
         super().__init__()
         self.setupGPIO()
-        print("GPIO setup completed")
-        print(f"Current pin {self.START_BUTTON_PIN} state: {GPIO.input(self.START_BUTTON_PIN)}")
 
         
     def setupGPIO(self):
@@ -68,7 +65,6 @@ class GpioPinsController(QObject):
             GPIO.add_event_detect(self.START_BUTTON_PIN, GPIO.FALLING, callback=self.startgame, bouncetime=200)
             GPIO.add_event_detect(self.BALL_FALLING_PIN, GPIO.FALLING, callback=self.lostball, bouncetime=200)
             GPIO.add_event_detect(self.BALL_FALLING_PIN, GPIO.RISING, callback=self.balldetected, bouncetime=200)
-            print("GPIO event detection setup complete")
 
         except Exception as e:
             print(f"GPIO Setup failed: {e}")
@@ -79,14 +75,10 @@ class GpioPinsController(QObject):
     def connectSignals(self, controller) -> None:
         #print(f"Controller type: {type(controller)}")
         self.gpioInputEvent.connect(controller.handleGpioInput)
-        print("Testing signal emission...")
-        self.gpioInputEvent.emit("Test")  # Test signal emission
-        print("GPIO signals connected")
 
     @pyqtSlot()
     def startgame(self, channel):
         """Manual trigger for start game event"""
-        print(f"GPIO: Button press detected on pin {channel}")
         self.gpioInputEvent.emit("Start")
 
     def ejectball(self):

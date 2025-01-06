@@ -23,8 +23,7 @@ RASPBERRY_PI_SETTINGS = {
         'BALL_FALLING_PIN': 18, # GPIO18 physical pin 12
         'BALL_EJECT_PIN': 12, # GPIO27 physical pin 32
         'START_BUTTON_LED_PIN': 22 # GPIO22 physical pin 15
-    },
-    'OS_USERNAME': 'chaes'
+    }
 }
 
 QML_SETTINGS = {
