@@ -31,9 +31,9 @@ class GpioPinsController(QObject):
     def cleanup(self):
         GPIO.cleanup()
 
-    def startgame(self):
-        """when the physical start button is pressed, print 'Start'"""
-        print("Start button pressed")
+    def startgame(self, channel):
+        """Manual trigger for start game event"""
+        print("GPIO: Button press detected on pin " + str(channel)) # Add debug print
 
 if __name__ == "__main__":
     controller = GpioPinsController()

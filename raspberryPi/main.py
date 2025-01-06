@@ -61,10 +61,15 @@ def main():
             widget.closeEvent = lambda event: event.ignore()
 
         # Connect signals/slots after all components exist
+        print("Connecting view signals...")
         viewManager.connectSignals(gameController)
-        print("connected viewManager signals to gameController")
-        gpioPinsController.connectSignals(gameController)
-        print("connected gpioPinsController signals to gameController")
+        print("View signals connected")
+        
+        print("Connecting GPIO signals...")
+        gpioPinsController.connectSignals(gameController) 
+        print("GPIO signals connected")
+        
+        print("Starting application event loop...")
         
         # Start application
         sys.exit(app.exec_())

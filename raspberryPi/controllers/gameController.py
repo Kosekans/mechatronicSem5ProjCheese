@@ -47,20 +47,19 @@ class GameController(QObject):
             pass#todo
      
     def handleGpioInput(self, event: str):
-        #Dictionary to map button IDs to their corresponding methods
+        print(f"GameController received GPIO event: {event}") # Add debug print
         pin_actions = {
             'Start': self.clickStartGame,
             'Ball lost': self.setBallInRocket(False),
             'Ball detected': self.setBallInRocket(True)
         }
         
-        # Call the corresponding method if pin exists
         action = pin_actions.get(event)
         if action:
             try:
                 action()
             except Exception as e:
-                # Show error to user through ViewManager
+                print(f"Error handling GPIO input: {e}") # Add debug print
                 self.viewManager.showWarning(str(e))
      
     def setBallInRocket(self, value: bool):

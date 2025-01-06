@@ -73,12 +73,16 @@ class GpioPinsController(QObject):
         GPIO.cleanup()
 
     def connectSignals(self, controller) -> None:
+        # Add debug print
+        print("Connecting GPIO signals to controller...")
         self.gpioInputEvent.connect(controller.handleGpioInput)
+        print("GPIO signals connected")
 
+    @pyqtSlot()
     def startgame(self, channel):
         """Manual trigger for start game event"""
-        print("GPIO: Button pressed on pin", channel)
-        self.gpioInputEvent.emit("Start")
+        print("GPIO: Button press detected on pin " + str(channel)) # Add debug print
+        self.gpioInputEvent.emit("Start") # Make sure signal is emitted
 
     def ejectball(self):
         p = GPIO.PWM(self.BALL_EJECT_PIN, 50) # GPIO 17 als PWM mit 50Hz
