@@ -10,7 +10,7 @@ Item {
     GridLayout {
         anchors.centerIn: parent
         width: parent.width * 0.8
-        columns: 3
+        columns: 4
         rowSpacing: 10
         columnSpacing: 10
 
@@ -18,6 +18,12 @@ Item {
             text: "Back"
             Layout.fillWidth: true
             onClicked: viewManager.onPageChangeClick("back")
+        }
+
+        Button {
+            text: "null the motors"
+            Layout.fillWidth: true
+            onClicked: viewManager.onPageChangeClick("null")
         }
 
         Button {

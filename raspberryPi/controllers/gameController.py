@@ -70,11 +70,6 @@ class GameController(QObject):
 
     def prepareRocket(self):
         self.arduinoController.sendAntrieb(self.gameState.getInfoForAntrieb)
-        '''
-        self.arduinoController.sendAntrieb("null")
-        while self.arduinoController.getAntrieb != "DONE": #todo in arduino code
-            pass
-        '''
         self.arduinoController.sendAntrieb("EJECTPOS")
         while self.gameState.ballInRocket == False:
             pass
@@ -86,7 +81,8 @@ class GameController(QObject):
         button_actions = {
             'startGame': self.clickStartGame,
             'updatePorts': self.clickUpdatePorts,
-            'initializeHardware': self.clickInitializeHardware
+            'initializeHardware': self.clickInitializeHardware,
+            'null': self.clickNullAntrieb
         }
         
         # Call the corresponding method if button ID exists
@@ -119,6 +115,8 @@ class GameController(QObject):
             raise ValueError(ERROR_MESSAGES['HARDWARE_NOT_INITIALIZED'])
         elif self.gameState.active:
             raise ValueError(ERROR_MESSAGES['GAME_ALREADY_ACTIVE'])
+        elif self.gameState.arduinoBusy:
+            raise ValueError(ERROR_MESSAGES['ARDUINO_BUSY'])
         else:
             self.gameState.active = True
             self.setupGame()
@@ -139,6 +137,12 @@ class GameController(QObject):
         else:
             self.gameState.hardwareInitialized = True
             raise ValueError(ERROR_MESSAGES['SUCCESS'])
+    
+    def clickNullAntrieb(self):
+        self.arduinoController.sendAntrieb("null")
+        while self.arduinoController.getAntrieb != "DONE":
+            self.gameState.arduinoBusy = True
+        self.gameState.arduinoBusy = False
 
     def handleCheckboxChanged(self, checkbox_id: str, is_checked: bool):
         """Handle checkbox state changes from the settings view."""

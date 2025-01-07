@@ -58,5 +58,6 @@ ERROR_MESSAGES = {
     'NO_INTERNET_CONNECTION': 'No internet connection found, could not update repository. Check the connection and retart to update',
     'UPDATE_FAILED': 'Failed to update repository',
     'RUNNING_GAME': 'Game is already running',
+    'ARDUINOS_BUSY': 'Arduinos are not ready, wait a moment',
     'SUCCESS': 'passt scho, het klappt'
 }
