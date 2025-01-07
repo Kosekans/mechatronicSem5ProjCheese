@@ -48,16 +48,18 @@ def main():
         print("initialized component GameController")
 
         # Force fullscreen and disable window controls
-        for widget in app.topLevelWidgets():
-            widget.setWindowFlags(
+        if not app.primaryScreen():
+            raise RuntimeError("No screen detected!")
+
+        root = viewManager.engine.rootObjects()[0]
+        if root:
+            # Force fullscreen and disable window controls
+            root.setProperty("visibility", QWindow.FullScreen)
+            root.setFlags(
                 Qt.Window |
                 Qt.FramelessWindowHint |
                 Qt.WindowStaysOnTopHint
             )
-            widget.showFullScreen()
-            
-            # Prevent Alt+F4
-            widget.closeEvent = lambda event: event.ignore()
 
         # Connect signals/slots after all components exist
         viewManager.connectSignals(gameController)
@@ -69,28 +71,6 @@ def main():
         sys.exit(app.exec_())
         print("started application")
 
-        #old
-        '''
-        root = viewManager.engine.rootObjects()[0]
-        if root:
-            root.setProperty("visibility", QWindow.FullScreen)
-        '''
-
-        # old
-        '''
-        for widget in app.topLevelWidgets():
-            if HelperFunctions.is_raspberry_pi():
-                widget.setWindowFlags(
-                    Qt.Window |
-                    Qt.FramelessWindowHint |
-                    Qt.WindowStaysOnTopHint
-                )
-                print("Setting window to fullscreen")
-                widget.showFullScreen()
-                print("Window set to fullscreen")
-            else:
-                widget.show()
-        '''
     except Exception as e:
         print.error(f"Application failed: {e}")
         return 1

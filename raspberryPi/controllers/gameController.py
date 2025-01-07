@@ -1,7 +1,6 @@
 import sys
 import os
 from PyQt5.QtCore import QObject, pyqtSignal
-import time
 
 # Get the current file's directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -86,7 +85,6 @@ class GameController(QObject):
         # Dictionary to map button IDs to their corresponding methods
         button_actions = {
             'startGame': self.clickStartGame,
-            'saveSettings': self.clickSaveSettings,
             'updatePorts': self.clickUpdatePorts,
             'initializeHardware': self.clickInitializeHardware
         }
@@ -124,10 +122,6 @@ class GameController(QObject):
         else:
             self.gameState.active = True
             self.setupGame()
-
-    def clickSaveSettings(self):
-        # Save settings to (maybe???????????) config file or certain model object
-        pass
     
     def clickUpdatePorts(self):
         # Update ports for serial communication

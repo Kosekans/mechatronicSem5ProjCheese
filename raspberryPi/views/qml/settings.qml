@@ -10,7 +10,7 @@ Item {
     GridLayout {
         anchors.centerIn: parent
         width: parent.width * 0.8
-        columns: 2
+        columns: 3
         rowSpacing: 10
         columnSpacing: 10
 
@@ -18,12 +18,6 @@ Item {
             text: "Back"
             Layout.fillWidth: true
             onClicked: viewManager.onPageChangeClick("back")
-        }
-
-        Button {
-            text: "Save Settings"
-            Layout.fillWidth: true
-            onClicked: viewManager.onButtonClick("saveSettings")
         }
 
         Button {

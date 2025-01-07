@@ -10,15 +10,9 @@ Item {
 
     GridLayout {
         anchors.fill: parent
-        columns: 3
-        rows: 2
+        columns: 4
+        rows: 1
         
-        Button {
-            text: "Start Game"
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            onClicked: viewManager.onButtonClick("startGame")
-        }
         Button {
             text: "Set Game Mode"
             Layout.fillWidth: true
