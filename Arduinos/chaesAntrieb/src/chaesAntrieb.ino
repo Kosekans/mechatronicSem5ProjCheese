@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include <util/atomic.h>
-#include "PIDController.h"
 #include <Adafruit_NeoPixel.h>
 #include <FireTimer.h>
+#include <PID_v1.h>
+#include <math.h>
 
 // Define the pins for the left motor
 #define ENR 4   // pmw pin (speed)
@@ -100,10 +101,11 @@ enum Modes {
   ERROR_MODE,
   ORIGIN_MODE,
   EJECT_MODE,
-  DEMO_MODE
+  DEMO_MODE,
+  WAITING_MODE
 };
 // defaulft mode
-Modes mode = PLAYER_MODE;
+Modes mode = INITIALIZATION_MODE;
 
 // PID Settings
 float error, integral, derivative, previousError;
@@ -148,6 +150,8 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(limitSwitchL), readLimitSwitchL, FALLING);
   attachInterrupt(digitalPinToInterrupt(limitSwitchR), readLimitSwitchR, FALLING);
 
+
+
   // Setting up the NeoPixel
   boarderStrip.begin();
   ringStrip.begin();
@@ -166,11 +170,6 @@ void setup() {
 void loop() {
   checkForInput();
   getCoords();
-  Serial.print(coords[0]) + Serial.println(coords[1]);
-  /*Serial.print("R: ");
-  Serial.println(posVR);
-  Serial.print("L: ");
-  Serial.println(posVL);*/
   blockCheck();
   executemode();
 }
@@ -193,10 +192,10 @@ void checkForInput() {
     } else if (input == "TRANSPORT") {
       mode = TRANSPORT_MODE;
       return;
-    } else if (input == "null" || input == "reset") {
+    } else if (input == "NULL") {
       mode = INITIALIZATION_MODE;
       return;
-    } else if (input == "play") {
+    } else if (input == "PLAY") {
       mode = PLAYER_MODE;
     }
 
@@ -240,9 +239,24 @@ void executemode() {
       moveToEjectPos();
       break;
     case ERROR_MODE:
+      if (!on){
+        Serial.print("ERROR");
+      }
+      stopMotors();
       ledError();
       break;
+    case WAITING_MODE:
+      on = false;
+      stopMotors();
+      break;
+    case DEMO_MODE:
+      demoMode();
+      break;
   }
+}
+
+void demoMode(){
+
 }
 
 void playerMode() {
@@ -268,7 +282,7 @@ void sendCoords() {
   Serial.println(String(coords[0]) + "/" + String(coords[1]));
 }
 
-int* getCoords() {
+void getCoords() {
   int posL, posR;
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     posL = posVL;
@@ -276,7 +290,7 @@ int* getCoords() {
   }
   // coordinates
   calculateCoords(BOARD_WIDTH + (2 * FEED_THROUGH_OFFSETX), posL / COORD_SCAL, posR / COORD_SCAL);
-  //boxCoords(BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
+  boxCoords(BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
 }
 
 void blockCheck() {
@@ -301,8 +315,8 @@ void findCoordOrigin() {
     case 3:
       phase = distanceToOrigin(MAX_SPEED, phase);
     case 4:
-      Serial.println("Vier");
-      mode = EJECT_MODE;
+      Serial.println("DONE");
+      mode = WAITING_MODE;
       break;
   }
 }
@@ -314,7 +328,6 @@ void setMotorState(int in1, int in2, int en, int speed) {
 }
 
 int approachOrigin(int speed, int phaseR) {
-  Serial.println("IJSd");
   if (!nullLeft) {
     setMotorState(IN1, IN2, ENL, speed);
   }
@@ -322,14 +335,17 @@ int approachOrigin(int speed, int phaseR) {
     setMotorState(IN3, IN4, ENR, speed);
   }
   if (nullLeft && nullRight) {
-    int cableLength = round(sqrt((FEED_THROUGH_OFFSETY + BOARD_HIGHT + COORD_NULL_OFFSETY)^2 + (BOARD_WIDTH/2+FEED_THROUGH_OFFSETX)^2)*COORD_SCAL);
+    double offsetY = FEED_THROUGH_OFFSETY + BOARD_HIGHT + COORD_NULL_OFFSETY;
+    double offsetX = (BOARD_WIDTH/2.0) + FEED_THROUGH_OFFSETX;
+    double distance = sqrt(pow(offsetY, 2) + pow(offsetX, 2));
+    int cableLength = round(distance * COORD_SCAL);
     posVL = posVR = cableLength;
     phaseR++;
   }
   return phaseR;
 }
+
 int distanceToOrigin(int speed, int phaseD) {
-  Serial.println(phaseD);
   if (posVL <= 100) {
     setMotorState(IN2, IN1, ENL, speed);
   }
@@ -338,27 +354,30 @@ int distanceToOrigin(int speed, int phaseD) {
   }
 
   if (posVL > 100 && posVR > 100) {
-    Serial.println("O");
     stopMotors();
     nullLeft = nullRight = false;
     phaseD++;
   }
-  Serial.println(phaseD);
   return phaseD;
 }
 
 void moveToEjectPos() {
   bool left = true;
-  int goalDistance = (FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2) + EJECT_POS[0]) ^ 2 + (FEED_THROUGH_OFFSETY + BOARD_HIGHT - EJECT_POS[1]) ^ 2;
+  double x = FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2.0) + EJECT_POS[0];
+  double y = FEED_THROUGH_OFFSETY + BOARD_HIGHT - EJECT_POS[1];
+  int goalDistance = (int)(pow(x, 2) + pow(y, 2));
   int deltaLeft = posVL - goalDistance;
   int deltaRight = posVR - goalDistance;
   regulateSpeed(deltaLeft, left);
   regulateSpeed(deltaRight, !left);
+  mode = WAITING_MODE;
 }
 
 void moveToStartPos() {
   bool left = true;
-  int goalDistance = (FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2)) ^ 2 + (FEED_THROUGH_OFFSETY + BOARD_HIGHT) ^ 2;
+  double x = FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2.0);
+  double y = FEED_THROUGH_OFFSETY + BOARD_HIGHT;
+  int goalDistance = (int)(pow(x, 2) + pow(y, 2));
   int deltaLeft = posVL - goalDistance;
   int deltaRight = posVR - goalDistance;
   if (posVL < RADIUS_TO_START) {
@@ -366,6 +385,7 @@ void moveToStartPos() {
   }
   regulateSpeed(deltaLeft, left);
   regulateSpeed(deltaRight, !left);
+  mode = WAITING_MODE;
 }
 
 void regulateSpeed(int delta, bool left) {
@@ -391,7 +411,7 @@ void regulateSpeed(int delta, bool left) {
   }
 }
 
-float* calculateCoords(int distance, int left, int right) {
+void calculateCoords(int distance, int left, int right) {
   //Kathetensatz und Höhensatz von Euklid
   int p = left * left / distance;
   int q = right * right / distance;
@@ -400,7 +420,7 @@ float* calculateCoords(int distance, int left, int right) {
   coords[1] = BOARD_HIGHT + FEED_THROUGH_OFFSETY - h;
 }
 
-int* boxCoords(int leftBorder, int rightBorder, int lowerBorder,
+void boxCoords(int leftBorder, int rightBorder, int lowerBorder,
                int upperBorder) {
   if (coords[0] < leftBorder) {
     coords[0] = leftBorder;
@@ -414,7 +434,6 @@ int* boxCoords(int leftBorder, int rightBorder, int lowerBorder,
   if (coords[1] > upperBorder) {
     coords[1] = upperBorder;
   }
-  return coords;
 }
 
 void moveRocket(int leftSpeed, int rightSpeed) {
@@ -439,29 +458,27 @@ void moveRocket(int leftSpeed, int rightSpeed) {
   }
 
   // catch if rocket is at boarder and set the speed of the motors
-  /*
   if ((dirL && blockLeftPos) || (!dirL && blockLeftNeg)) {
     digitalWrite(IN1, false);
     digitalWrite(IN2, false);
     analogWrite(ENL, 0);
-    Serial.println("OSDKJ");
   } else {
-    */
-  analogWrite(ENL, abs(leftSpeed));
-  /*}
-  if ((dirR && blockRightPos) || (!dirR && blockRightNeg)) {
-    digitalWrite(IN3, false);
-    digitalWrite(IN4, false);
-    analogWrite(ENR, 0);
-  } else {*/
-  analogWrite(ENR, abs(rightSpeed));
-  //}
+    analogWrite(ENL, abs(leftSpeed));
+    if ((dirR && blockRightPos) || (!dirR && blockRightNeg)) {
+      digitalWrite(IN3, false);
+      digitalWrite(IN4, false);
+      analogWrite(ENR, 0);
+    } else {
+    analogWrite(ENR, abs(rightSpeed));
+    }
+  }
 }
 
 void transportMode() {
   while (!blockLeftPos && !blockRightPos) {
     //moveRocket(MAX_SPEED, MAX_SPEED);
   }
+  mode = WAITING_MODE;
 }
 
 void readEncoderL() {
@@ -483,10 +500,7 @@ void readEncoderR() {
 }
 
 void readLimitSwitchL() {
-  stopMotors();
   if (mode != INITIALIZATION_MODE) {
-    Serial.println("ERROR LEFT");
-    Serial.println("Type in reset to renull the game");
     mode = ERROR_MODE;
   } else {
     nullLeft = true;
@@ -494,10 +508,7 @@ void readLimitSwitchL() {
 }
 
 void readLimitSwitchR() {
-  stopMotors();
   if (mode != INITIALIZATION_MODE) {
-    Serial.println("ERROR RIGHT");
-    Serial.println("Type in reset to renull the game");
     mode = ERROR_MODE;
   } else {
     nullRight = true;
@@ -604,9 +615,8 @@ void ledInitialisation() {
   boarderStrip.show();  // Update strip with new contents
   ringStrip.show();     // Update strip with new contents
   initialisationCounter++;
+  mode = WAITING_MODE;
 }
-
-
 
 int PIDController(float delta) {
   float Kp = 1.0;                     // Proportional gain
