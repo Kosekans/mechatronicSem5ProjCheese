@@ -41,7 +41,6 @@ const long MIN_JVALL = 355;
 const long MAX_JVALR = 725;  //  max value for joysticks
 const long MAX_JVALL = 650;
 
-const long MAX_JVAL = 1023;  // 1023 max value for joysticks. min value is 0
 const int BOARD_WIDTH = 533;
 const int FEED_THROUGH_OFFSETX = 100;
 const int FEED_THROUGH_OFFSETY = 100;
@@ -109,7 +108,7 @@ enum Modes {
   WAITING_MODE
 };
 // defaulft mode
-Modes mode = INITIALIZATION_MODE;
+Modes mode = PLAYER_MODE;
 
 // PID Settings
 float error, integral, derivative, previousError;
@@ -154,8 +153,8 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(limitSwitchL), readLimitSwitchL, FALLING);
   attachInterrupt(digitalPinToInterrupt(limitSwitchR), readLimitSwitchR, FALLING);
   
-  pinMode(joystickL, INPUT);
-  pinMode(joystickR, INPUT);
+  //pinMode(joystickL, INPUT);
+  //pinMode(joystickR, INPUT);
 
   // Setting up the NeoPixel
   boarderStrip.begin();
@@ -175,7 +174,7 @@ void setup() {
 void loop() {
   checkForInput();
   getCoords();
-  blockCheck();
+  //blockCheck();
   executemode();
 }
 
