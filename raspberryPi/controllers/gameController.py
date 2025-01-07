@@ -1,6 +1,7 @@
 import sys
 import os
 from PyQt5.QtCore import QObject, pyqtSignal
+import time
 
 # Get the current file's directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -36,13 +37,17 @@ class GameController(QObject):
 
     
     def setupGame(self):
-        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['follow']:
-            pass#todo
+        self.prepareRocket
+        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODE']['follow']:
+            pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
-            #chaesZielsystemCom.writeSerial(goalCoordsToString(currentGame.goalCoords,currentGame.goalCoordsVelo))
-            pass#todo
+            self.gameState.goalCoords = HelperFunctions.createGoalCoords()
+            self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
+            while self.gameState.ballInRocket == True:
+                pass
+            self.gameState.reset
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
-            pass#todo
+            pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass#todo
      
@@ -59,11 +64,23 @@ class GameController(QObject):
             try:
                 action()
             except Exception as e:
-                print(f"Error handling GPIO input: {e}") # Add debug print
                 self.viewManager.showWarning(str(e))
      
     def setBallInRocket(self, value: bool):
-        self.gameState.ballInRocket = value
+        self.gameState.ballInRocket = value            
+
+    def prepareRocket(self):
+        self.arduinoController.sendAntrieb(self.gameState.getInfoForAntrieb)
+        '''
+        self.arduinoController.sendAntrieb("null")
+        while self.arduinoController.getAntrieb != "DONE": #todo in arduino code
+            pass
+        '''
+        self.arduinoController.sendAntrieb("EJECTPOS")
+        while self.gameState.ballInRocket == False:
+            pass
+        #to do, wait for signal ball in rockets
+        self.arduinoController.sendAntrieb("STARTPOS")
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
@@ -102,7 +119,11 @@ class GameController(QObject):
             raise ValueError(ERROR_MESSAGES['NO_GAME_MODE_SELECTED'])
         elif not self.gameState.hardwareInitialized:
             raise ValueError(ERROR_MESSAGES['HARDWARE_NOT_INITIALIZED'])
-        # Proceed with game start logic
+        elif self.gameState.active:
+            raise ValueError(ERROR_MESSAGES['GAME_ALREADY_ACTIVE'])
+        else:
+            self.gameState.active = True
+            self.setupGame()
 
     def clickSaveSettings(self):
         # Save settings to (maybe???????????) config file or certain model object
