@@ -38,7 +38,7 @@ class GameController(QObject):
     
     def setupGame(self):
         self.prepareRocket
-        if self.gameState.gameMode == GAME_SETTINGS['GAME_MMDE']['follow']:
+        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODE']['follow']:
             pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
             self.gameState.goalCoords = HelperFunctions.createGoalCoords()
@@ -47,7 +47,6 @@ class GameController(QObject):
                 pass
             self.gameState.reset
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
-            pass
             pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass#todo
