@@ -42,9 +42,6 @@ class GameController(QObject):
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
             self.gameState.goalCoords = HelperFunctions.createGoalCoords()
             self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
-            while self.gameState.ballInRocket == True:
-                pass
-            self.gameState.reset
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
             pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
@@ -69,7 +66,13 @@ class GameController(QObject):
                 self.viewManager.showWarning(str(e))
      
     def setBallInRocket(self, value: bool):
-        self.gameState.ballInRocket = value            
+        self.gameState.ballInRocket = value
+        if not value:
+            self.checkHighScore
+            self.gameState.reset
+
+    def checkHighScore(self):
+        pass
 
     def prepareRocket(self):
         self.arduinoController.sendAntrieb(self.gameState.getInfoForAntrieb)
