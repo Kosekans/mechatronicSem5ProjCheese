@@ -12,6 +12,7 @@ from typing import List
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import Qt
 from config.settings import QML_SETTINGS, GAME_SETTINGS, ERROR_MESSAGES  # Update import at top
 
 
@@ -82,43 +83,32 @@ class ViewManager(QObject):
         self.pages = set(self.page_files.keys())
 
     def setupUI(self) -> None:
-        """
-        Initialize the UI components and load the main QML window.
-        Validates required QML files and sets up window properties.
-        Raises:
-            FileNotFoundError: If required QML files are missing
-            RuntimeError: If QML loading fails
-        """
-        # Expose this instance to QML for direct access
+        """Initialize the UI components and load the main QML window."""
         self.engine.rootContext().setContextProperty("viewManager", self)
-        # Get actual screen dimensions
         screen = QDesktopWidget().screenGeometry()
         
-        # Configure window properties in QML context
         self.engine.rootContext().setContextProperty("windowWidth", screen.width())
         self.engine.rootContext().setContextProperty("windowHeight", screen.height())
         self.engine.rootContext().setContextProperty("windowTitle", QML_SETTINGS['TITLE'])
-        self.engine.rootContext().setContextProperty("warningMessage", self.warningMessage)  
+        self.engine.rootContext().setContextProperty("warningMessage", self.warningMessage)
         
-        # Locate and validate all required QML files
         current_dir = os.path.dirname(os.path.abspath(__file__))
         qml_path = os.path.join(current_dir, 'qml', 'mainWindow.qml')
         
+        # Validate QML files
         required_files = [qml_path] + [
             os.path.join(self.qml_dir, qml_file)
             for qml_file in self.page_files.values()
         ]
         
-        # Verify existence of all required QML files
         for file in required_files:
             if not os.path.exists(file):
                 raise FileNotFoundError(f"Required QML file not found: {file}")
-            
-        # Load main QML file and verify successful loading
+        
         self.engine.load(qml_path)
         if not self.engine.rootObjects():
             raise RuntimeError("Failed to load QML")
-
+    
     def navigateToPage(self, page_name: str) -> None:
         """
         Navigate to a specified page by name.

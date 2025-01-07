@@ -47,20 +47,6 @@ def main():
         gameController = GameController(gameState, viewManager, arduinoController, gpioPinsController)
         print("initialized component GameController")
 
-        # Force fullscreen and disable window controls
-        if not app.primaryScreen():
-            raise RuntimeError("No screen detected!")
-
-        root = viewManager.engine.rootObjects()[0]
-        if root:
-            # Force fullscreen and disable window controls
-            root.setProperty("visibility", QWindow.FullScreen)
-            root.setFlags(
-                Qt.Window |
-                Qt.FramelessWindowHint |
-                Qt.WindowStaysOnTopHint
-            )
-
         # Connect signals/slots after all components exist
         viewManager.connectSignals(gameController)
         print("View signals connected")
@@ -68,11 +54,10 @@ def main():
         print("GPIO signals connected")
         
         # Start application
-        sys.exit(app.exec_())
-        print("started application")
+        return app.exec_()
 
     except Exception as e:
-        print.error(f"Application failed: {e}")
+        print(f"Application failed: {e}")
         return 1
 
 if __name__ == "__main__":

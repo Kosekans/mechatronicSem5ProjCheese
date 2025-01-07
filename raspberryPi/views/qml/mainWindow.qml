@@ -9,6 +9,7 @@ Window {
     width: windowWidth
     height: windowHeight
     title: windowTitle
+    visibility: Window.FullScreen
 
     Loader {
         id: pageLoader
@@ -44,6 +45,13 @@ Window {
         title: "Warning"
         icon: StandardIcon.Warning
         standardButtons: StandardButton.Ok
+        modality: Qt.ApplicationModal
+        visible: false 
+        
+        // Close only when Ok is clicked
+        onAccepted: {
+            close()
+        }
     }
 
     Connections {
