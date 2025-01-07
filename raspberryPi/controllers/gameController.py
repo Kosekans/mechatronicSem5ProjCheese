@@ -12,7 +12,7 @@ from controllers import *
 from models import *
 from views.viewManager import ViewManager
 from utils.helperFunctions import HelperFunctions
-from config.settings import ERROR_MESSAGES, GAME_SETTINGS
+from config.settings import ERROR_MESSAGES, GAME_SETTINGS, SUCCESS_MESSAGES
 
 class GameController(QObject):
     gameStateChanged = pyqtSignal(dict)
@@ -114,7 +114,7 @@ class GameController(QObject):
         elif not self.gameState.hardwareInitialized:
             raise ValueError(ERROR_MESSAGES['HARDWARE_NOT_INITIALIZED'])
         elif self.gameState.active:
-            raise ValueError(ERROR_MESSAGES['GAME_ALREADY_ACTIVE'])
+            raise ValueError(ERROR_MESSAGES['RUNNING_GAME'])
         elif self.gameState.arduinoBusy:
             raise ValueError(ERROR_MESSAGES['ARDUINO_BUSY'])
         else:
@@ -127,7 +127,7 @@ class GameController(QObject):
             raise ValueError(ERROR_MESSAGES['PORT_UPDATE_FAILED'])
         else:
             self.gameState.portsFound = True
-            raise ValueError(ERROR_MESSAGES['SUCCESS'])
+            #todo (SUCCESS_MESSAGES['PORTS_UPDATED'])
         
     def clickInitializeHardware(self):
         if self.gameState.portsFound is False:
@@ -136,7 +136,7 @@ class GameController(QObject):
             raise ValueError(ERROR_MESSAGES['HARDWARE_INITIALIZATION_FAILED'])
         else:
             self.gameState.hardwareInitialized = True
-            raise ValueError(ERROR_MESSAGES['SUCCESS'])
+            #todo (SUCCESS_MESSAGES['HARDWARE_INITIALIZED'])
     
     def clickNullAntrieb(self):
         self.arduinoController.sendAntrieb("null")
