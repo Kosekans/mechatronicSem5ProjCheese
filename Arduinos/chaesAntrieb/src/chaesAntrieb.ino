@@ -128,6 +128,7 @@ bool change = true;
 uint32_t colorR;
 uint32_t colorB;
 bool on = false;
+FireTimer timerDemo;
 
 void setup() {
   // dc motor entcoder
@@ -166,6 +167,7 @@ void setup() {
   allGreen();
 
   waveTimer.begin(2000);
+  timerDemo.begin(500);
 
   Serial.begin(9600);
   Serial.setTimeout(10);
@@ -273,7 +275,13 @@ void playerMode(bool demo) {
   if (!demo){
     joystickLValue = analogRead(joystickL);
     joystickRValue = analogRead(joystickR);
-  }else{    
+  }else{/*
+    if (timerDemo.fire()) {
+      joystickLValue = random(MIN_JVALL, MAX_JVALL);
+      joystickRValue = random(MIN_JVALR, MAX_JVALR);
+    }
+    */
+    delay(500);
     joystickLValue = random(MIN_JVALL, MAX_JVALL);
     joystickRValue = random(MIN_JVALR, MAX_JVALR);
   }
