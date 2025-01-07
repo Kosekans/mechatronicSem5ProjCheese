@@ -88,6 +88,12 @@ Item {
                 property string modeValue: viewManager.getGameMode("inverseFollow")
                 onClicked: if (checked) viewManager.onGameModeChanged(modeValue)
             }
+            RadioButton {
+                text: "Demo Mode"
+                ButtonGroup.group: gameModeGroup
+                property string modeValue: viewManager.getGameMode("demo")
+                onClicked: if (checked) viewManager.onGameModeChanged(modeValue)
+            }
         }
 
         // Right Category - Settings

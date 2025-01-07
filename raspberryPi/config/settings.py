@@ -35,7 +35,8 @@ GAME_SETTINGS = {
         'follow': 'follow',
         'goal': 'goal',
         'infinity': 'infinity',
-        'inverseFollow': 'inverseFollow'
+        'inverseFollow': 'inverseFollow',
+        'demo': 'demo'
     },
     'GAME_BOOLS_DEFAULT': {
         'inverseSticksDefault': False,

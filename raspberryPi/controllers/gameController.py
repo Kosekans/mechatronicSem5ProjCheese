@@ -49,6 +49,9 @@ class GameController(QObject):
             pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass#todo
+        elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['demo']:
+            self.arduinoController.sendAntrieb("DEMO")
+            self.arduinoController.sendZiel("DEMO")
      
     def handleGpioInput(self, event: str):
         print(f"GameController received GPIO event: {event}") # Add debug print
