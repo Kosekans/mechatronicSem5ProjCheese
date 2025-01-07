@@ -201,6 +201,8 @@ void checkForInput() {
       return;
     } else if (input == "PLAY") {
       mode = PLAYER_MODE;
+    } else if (input == "DEMO"){
+      mode = DEMO_MODE;
     }
 
     // Parse the input string
@@ -233,7 +235,7 @@ void executemode() {
       transportMode();
       break;
     case PLAYER_MODE:
-      playerMode();
+      playerMode(false);
       playLED();
       break;
     case ORIGIN_MODE:
@@ -254,24 +256,27 @@ void executemode() {
       stopMotors();
       break;
     case DEMO_MODE:
-      demoMode();
+      playerMode(true);;
       break;
   }
 }
 
-void demoMode(){
-
-}
-
-void playerMode() {
+void playerMode(bool demo) {
   // Read the joystick values and set the speed of the motors
   bool inverse = randomInverseSticks ? random(0, 2) : inverseSticks;
   float velocity = randomRocketVelocity ? random(0, 2) : rocketVelocity;
   int baseSpeed = round(velocity * MAX_SPEED);
   int adjustedSpeed = baseSpeed * (inverse ? -1 : 1) * (gameActive ? 1 : 0);
+  int joystickLValue;
+  int joystickRValue;
 
-  int joystickLValue = analogRead(joystickL);
-  int joystickRValue = analogRead(joystickR);
+  if (!demo){
+    joystickLValue = analogRead(joystickL);
+    joystickRValue = analogRead(joystickR);
+  }else{    
+    joystickLValue = random(MIN_JVALL, MAX_JVALL);
+    joystickRValue = random(MIN_JVALR, MAX_JVALR);
+  }
 
   int leftSpeed = (int)round(mapFloat(joystickLValue, MIN_JVALL, MAX_JVALL, -adjustedSpeed, adjustedSpeed));
   int rightSpeed = (int)round(mapFloat(joystickRValue, MIN_JVALR, MAX_JVALR, -adjustedSpeed, adjustedSpeed));
@@ -374,6 +379,7 @@ void moveToEjectPos() {
   int deltaRight = posVR - goalDistance;
   regulateSpeed(deltaLeft, left);
   regulateSpeed(deltaRight, !left);
+  Serial.println("DONE");
   mode = WAITING_MODE;
 }
 
@@ -389,6 +395,7 @@ void moveToStartPos() {
   }
   regulateSpeed(deltaLeft, left);
   regulateSpeed(deltaRight, !left);
+  Serial.println("DONE");
   mode = WAITING_MODE;
 }
 
@@ -482,6 +489,7 @@ void transportMode() {
   while (!blockLeftPos && !blockRightPos) {
     //moveRocket(MAX_SPEED, MAX_SPEED);
   }
+  Serial.println("DONE");
   mode = WAITING_MODE;
 }
 
