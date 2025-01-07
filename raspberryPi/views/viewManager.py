@@ -31,6 +31,7 @@ class ViewManager(QObject):
     gameModeChanged = pyqtSignal(str)        # Emitted when game mode changes
     gameStateUpdated = pyqtSignal('QVariant')
     initialStateLoaded = pyqtSignal()
+    successMessage = pyqtSignal(str)  # Emitted to display success messages in QML
 
     def __init__(self, app: QApplication, internetConnection: bool, updateSuccessful: bool) -> None:
         """
@@ -91,6 +92,7 @@ class ViewManager(QObject):
         self.engine.rootContext().setContextProperty("windowHeight", screen.height())
         self.engine.rootContext().setContextProperty("windowTitle", QML_SETTINGS['TITLE'])
         self.engine.rootContext().setContextProperty("warningMessage", self.warningMessage)
+        self.engine.rootContext().setContextProperty("successMessage", self.successMessage)
         
         current_dir = os.path.dirname(os.path.abspath(__file__))
         qml_path = os.path.join(current_dir, 'qml', 'mainWindow.qml')
@@ -233,3 +235,12 @@ class ViewManager(QObject):
     def handleGameStateChanged(self, state: dict) -> None:
         """Handle game state updates from controller"""
         self.gameStateUpdated.emit(state)
+
+    @pyqtSlot(str)
+    def showSuccess(self, message: str) -> None:
+        """
+        Display a success message in the QML interface.
+        Args:
+            message (str): Success message to display
+        """
+        self.successMessage.emit(message)

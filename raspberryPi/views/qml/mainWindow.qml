@@ -54,11 +54,32 @@ Window {
         }
     }
 
+    MessageDialog {
+        id: successDialog
+        title: "Success"
+        icon: StandardIcon.Information
+        standardButtons: StandardButton.Ok
+        modality: Qt.ApplicationModal
+        visible: false 
+        
+        onAccepted: {
+            close()
+        }
+    }
+
     Connections {
         target: viewManager
         function onWarningMessage(message) {
             warningDialog.text = message
             warningDialog.open()
+        }
+    }
+
+    Connections {
+        target: viewManager
+        function onSuccessMessage(message) {
+            successDialog.text = message
+            successDialog.open()
         }
     }
 }

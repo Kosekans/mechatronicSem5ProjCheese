@@ -73,7 +73,6 @@ class GameController(QObject):
         self.arduinoController.sendAntrieb("EJECTPOS")
         while self.gameState.ballInRocket == False:
             pass
-        #to do, wait for signal ball in rockets
         self.arduinoController.sendAntrieb("STARTPOS")
 
     def handleButtonClicked(self, buttonId: str):
@@ -127,7 +126,7 @@ class GameController(QObject):
             raise ValueError(ERROR_MESSAGES['PORT_UPDATE_FAILED'])
         else:
             self.gameState.portsFound = True
-            #todo (SUCCESS_MESSAGES['PORTS_UPDATED'])
+            self.viewManager.showSuccess(SUCCESS_MESSAGES['PORTS_UPDATED'])
         
     def clickInitializeHardware(self):
         if self.gameState.portsFound is False:
@@ -136,13 +135,14 @@ class GameController(QObject):
             raise ValueError(ERROR_MESSAGES['HARDWARE_INITIALIZATION_FAILED'])
         else:
             self.gameState.hardwareInitialized = True
-            #todo (SUCCESS_MESSAGES['HARDWARE_INITIALIZED'])
+            self.viewManager.showSuccess(SUCCESS_MESSAGES['HARDWARE_INITIALIZED'])
     
     def clickNullAntrieb(self):
         self.arduinoController.sendAntrieb("null")
         while self.arduinoController.getAntrieb != "DONE":
             self.gameState.arduinoBusy = True
         self.gameState.arduinoBusy = False
+        self.viewManager.showSuccess(SUCCESS_MESSAGES['NULL_ANTRIEB'])
 
     def handleCheckboxChanged(self, checkbox_id: str, is_checked: bool):
         """Handle checkbox state changes from the settings view."""

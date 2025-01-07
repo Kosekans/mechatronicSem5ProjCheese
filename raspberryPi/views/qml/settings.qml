@@ -23,7 +23,7 @@ Item {
         Button {
             text: "null the motors"
             Layout.fillWidth: true
-            onClicked: viewManager.onPageChangeClick("null")
+            onClicked: viewManager.onButtonClick("null")
         }
 
         Button {

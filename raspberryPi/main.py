@@ -5,8 +5,6 @@ from utils.helperFunctions import HelperFunctions
 from controllers import *
 from controllers.gameController import GameController
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QWindow
 import sys
 import os
 
