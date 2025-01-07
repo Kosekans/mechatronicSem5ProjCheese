@@ -84,7 +84,8 @@ class GameController(QObject):
             'startGame': self.clickStartGame,
             'updatePorts': self.clickUpdatePorts,
             'initializeHardware': self.clickInitializeHardware,
-            'null': self.clickNullAntrieb
+            'null': self.clickNullAntrieb,
+            'abort': self.clickAbortGame
         }
         
         # Call the corresponding method if button ID exists
@@ -95,6 +96,10 @@ class GameController(QObject):
             except Exception as e:
                 # Show error to user through ViewManager
                 self.viewManager.showWarning(str(e))
+    
+    def clickAbortGame(self):
+        self.gameState.reset
+        self.prepareRocket()
 
     def getGameStateInfo(self):
         """Return current game state as a dictionary for UI updates"""
