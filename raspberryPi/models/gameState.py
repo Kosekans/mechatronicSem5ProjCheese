@@ -25,6 +25,7 @@ class GameState:
         self.randomInverseSticks: bool = GAME_SETTINGS['GAME_BOOLS_DEFAULT']['randomInverseSticksDefault']
         self.randomRocketVelocity: bool = GAME_SETTINGS['GAME_BOOLS_DEFAULT']['randomRocketVelocityDefault']
         self.randomLatency: bool = GAME_SETTINGS['GAME_BOOLS_DEFAULT']['randomLatencyDefault']
+        self.ballInRocket: bool = False
 
     def goalCoordsToString(self):
         return "{}/{}/{}".format(self.goalCoords[0], self.goalCoords[1], self.goalCoordsVelo)

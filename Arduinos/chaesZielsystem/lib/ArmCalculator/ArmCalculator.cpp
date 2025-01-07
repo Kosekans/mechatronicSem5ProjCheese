@@ -103,3 +103,46 @@ long ArmCalculator::t_inc(int moveTime, int angleIncrement, int deltaAngle){
 float ArmCalculator::mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
+
+// Method to get the current X and Y Positions from PWM Signal
+int ArmCalculator::getX(float angle1, float angle2){
+	int x;
+	float angle_tot = angle1 + angle2;
+	int cd = 2 * cos(angle_tot) * _lengthArm;
+
+	if (angle1 < 0){
+		x = sin((angle_tot/2) - angle1) * cd;
+	} else if (angle1 >= 0 && angle1 <= _pi/2){
+		x = sin((angle_tot/2) - angle1) * cd;
+	} else {
+		x = sin(angle1 - (angle_tot/2));
+	}
+	
+	return x;
+}
+
+int ArmCalculator::getY(float angle1, float angle2){
+	int y;
+	float angle_tot = angle1 + angle2;
+	int cd = 2 * cos(angle_tot) * _lengthArm;
+
+	if (angle1 < 0){
+		y = cos((angle_tot/2) - angle1) * cd;
+	} else if (angle1 >= 0 && angle1 <= _pi/2){
+		y = cos((angle_tot/2) - angle1) * cd;
+	} else {
+		y = cos(angle1 - (angle_tot/2));
+	}
+	
+	return y;
+}
+
+float ArmCalculator::getAngleFromPWM(int pwm, String side){
+	if (side == "Minus"){
+		mapFloat(pwm, 500, 2500, -18.5, 161.5);
+	} else if (side == "Plus"){
+		mapFloat(pwm, 500, 2500, 161.5, -18.5);
+	}
+	
+}
+

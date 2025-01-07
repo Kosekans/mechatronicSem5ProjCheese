@@ -9,7 +9,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QWindow
 import sys
 import os
-from pathlib import Path
 
 def main():
     try:
@@ -62,9 +61,9 @@ def main():
 
         # Connect signals/slots after all components exist
         viewManager.connectSignals(gameController)
-        print("connected viewManager signals to gameController")
-        gpioPinsController.connectSignals(gameController)
-        print("connected inputController signals to gameController")
+        print("View signals connected")
+        gpioPinsController.connectSignals(gameController) 
+        print("GPIO signals connected")
         
         # Start application
         sys.exit(app.exec_())

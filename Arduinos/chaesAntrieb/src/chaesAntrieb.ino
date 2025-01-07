@@ -41,6 +41,7 @@ const long MIN_JVALL = 355;
 const long MAX_JVALR = 725;  //  max value for joysticks
 const long MAX_JVALL = 650;
 
+const long MAX_JVAL = 1023;  // 1023 max value for joysticks. min value is 0
 const int BOARD_WIDTH = 533;
 const int FEED_THROUGH_OFFSETX = 100;
 const int FEED_THROUGH_OFFSETY = 100;
@@ -62,7 +63,10 @@ const int EJECT_POS[2] = { 0, -10 };
 const int NULLING_POS[2] = { 0, -50 };
 const int RADIUS_TO_START = 10;
 
-// Volatile variables
+// volatile keyword prevents the compiler from performing optimizations on the
+// variable that could potentially lead to it being misread. In addition to the
+// volatile directive, an ATOMIC_BLOCK macro is needed to access the position
+// variable.
 volatile int posVL = 0;  // position of the left motor
 volatile int posVR = 0;  // position of the right motor
 
@@ -149,8 +153,9 @@ void setup() {
   pinMode(limitSwitchR, INPUT);
   attachInterrupt(digitalPinToInterrupt(limitSwitchL), readLimitSwitchL, FALLING);
   attachInterrupt(digitalPinToInterrupt(limitSwitchR), readLimitSwitchR, FALLING);
-
-
+  
+  pinMode(joystickL, INPUT);
+  pinMode(joystickR, INPUT);
 
   // Setting up the NeoPixel
   boarderStrip.begin();

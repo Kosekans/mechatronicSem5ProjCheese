@@ -17,13 +17,12 @@ from config.settings import ERROR_MESSAGES, GAME_SETTINGS
 class GameController(QObject):
     gameStateChanged = pyqtSignal(dict)
     
-    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, inputController: GpioPinsController):
+    def __init__(self, gameState: GameState, viewManager: ViewManager, arduinoController: ArduinoController, gpioPinsController: GpioPinsController):
         super().__init__()  # Initialize QObject
         self.gameState = gameState
         self.viewManager = viewManager
         self.arduinoController = arduinoController
-        self.inputController = inputController
-        self.inputController.buttonClicked.connect(self.handleButtonClicked)
+        self.gpioPinsController = gpioPinsController
         
         # Initialize hardware state
         self.gameState.portsFound = False
@@ -46,6 +45,25 @@ class GameController(QObject):
             pass#todo
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             pass#todo
+     
+    def handleGpioInput(self, event: str):
+        print(f"GameController received GPIO event: {event}") # Add debug print
+        pin_actions = {
+            'Start': self.clickStartGame,
+            'Ball lost': self.setBallInRocket(False),
+            'Ball detected': self.setBallInRocket(True)
+        }
+        
+        action = pin_actions.get(event)
+        if action:
+            try:
+                action()
+            except Exception as e:
+                print(f"Error handling GPIO input: {e}") # Add debug print
+                self.viewManager.showWarning(str(e))
+     
+    def setBallInRocket(self, value: bool):
+        self.gameState.ballInRocket = value
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
@@ -53,8 +71,7 @@ class GameController(QObject):
             'startGame': self.clickStartGame,
             'saveSettings': self.clickSaveSettings,
             'updatePorts': self.clickUpdatePorts,
-            'initializeHardware': self.clickInitializeHardware,
-            'lightSensor': self.triggerLightSensor
+            'initializeHardware': self.clickInitializeHardware
         }
         
         # Call the corresponding method if button ID exists
@@ -107,9 +124,6 @@ class GameController(QObject):
         else:
             self.gameState.hardwareInitialized = True
             raise ValueError(ERROR_MESSAGES['SUCCESS'])
-
-    def triggerLightSensor(self):
-        pass
 
     def handleCheckboxChanged(self, checkbox_id: str, is_checked: bool):
         """Handle checkbox state changes from the settings view."""
