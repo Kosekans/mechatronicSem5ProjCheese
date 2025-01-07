@@ -17,11 +17,10 @@ def main():
         print("craeted QApplication")
                 
         # Default values for development
-        internetConnection = True
-        updateSuccessful = True
+        isRasbperryPi = HelperFunctions.is_raspberry_pi()
+        print("is rasbperry pi: " + str(isRasbperryPi))
 
-        '''
-        if HelperFunctions.is_raspberry_pi():
+        if isRasbperryPi:
             # Load real status on Pi
             try:
                 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -32,8 +31,9 @@ def main():
                         internetConnection = status['internetConnection']
                         updateSuccessful = status['updateSuccessful']
             except Exception as e:
-                logging.warning(f"Could not load setup status: {e}")
-        '''
+                print(f"Could not load setup status: {e}")
+        else:
+            internetConnection = updateSuccessful = True; #default values for dev
 
         # Initialize components
         gameState = GameState()
