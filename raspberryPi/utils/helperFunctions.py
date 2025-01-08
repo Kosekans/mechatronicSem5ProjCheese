@@ -16,9 +16,9 @@ class HelperFunctions:
                 return 'raspberry pi' in model
         except FileNotFoundError:
             return False
-
+    
     @staticmethod
-    def createGoalCoords():
+    def getCoordinates():
         # Get the directory of the current script
         current_dir = os.path.dirname(os.path.abspath(__file__))
         # Create the full path to coordinates.json
@@ -28,6 +28,11 @@ class HelperFunctions:
         with open(json_path, "r") as file:
             coordinates = json.load(file)
         
+        return coordinates
+
+    @staticmethod
+    def createGoalCoords() -> list[int]:        
+        coordinates = HelperFunctions.getCoordinates()  # Use class name to call static method
         # Get the length of the coordinates list
         length = len(coordinates)
         
@@ -44,3 +49,42 @@ class HelperFunctions:
     @staticmethod
     def coordsMatchCheck(coords1: list[int], coords2: list[int], tolerance: int) -> bool:
         return abs(coords1[0] - coords2[0]) <= tolerance and abs(coords1[1] - coords2[1]) <= tolerance
+    
+    @staticmethod
+    def createFollowCoords(previousX: int, previousY: int, step) -> list[int]:
+        coordinates = HelperFunctions.getCoordinates()
+        halfBoardWidth = 533/2
+        boardHeight = 770
+        current_step = step
+
+        while True:
+            attempts = 0
+            while attempts < 10:  # Try 10 times with current step size
+                if previousX < -halfBoardWidth + current_step:
+                    newX = previousX + current_step
+                elif previousX > halfBoardWidth - current_step:
+                    newX = previousX - current_step
+                elif previousY < current_step:
+                    newY = previousY + current_step
+                elif previousY > boardHeight - current_step:
+                    newY = previousY - current_step
+                else:
+                    newX = previousX + random.choice([current_step, -current_step, 0])
+                    newY = previousY + random.choice([current_step, -current_step, 0])
+                
+                newCoords = [newX, newY]
+                
+                collision = False
+                for coord in coordinates:
+                    if HelperFunctions.coordsMatchCheck(newCoords, [coord['X'], coord['Y']], 50):
+                        collision = True
+                        break
+                
+                if not collision:
+                    return newCoords
+                attempts += 1
+            
+            current_step += 1  # Increase step size if no valid coordinates found
+
+if __name__ == "__main__":
+    print(HelperFunctions.createFollowCoords(210,100,10))
