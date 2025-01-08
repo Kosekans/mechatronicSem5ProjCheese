@@ -64,7 +64,7 @@ class GameController(QObject):
     
     def gameOver(self, won: bool):
         self.checkHighScore
-        self.gameState.reset
+        self.clickAbortGame()
         if won:
             self.viewManager.showSuccess(SUCCESS_MESSAGES['GAME_WON'])
         if not won:
