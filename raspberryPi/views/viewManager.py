@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCursor 
 from config.settings import QML_SETTINGS, GAME_SETTINGS, ERROR_MESSAGES  # Update import at top
 
 
@@ -85,6 +86,10 @@ class ViewManager(QObject):
 
     def setupUI(self) -> None:
         """Initialize the UI components and load the main QML window."""
+        # Hide cursor by setting a blank cursor
+        blank_cursor = QCursor(Qt.BlankCursor)
+        self.app.setOverrideCursor(blank_cursor)
+        
         self.engine.rootContext().setContextProperty("viewManager", self)
         screen = QDesktopWidget().screenGeometry()
         
