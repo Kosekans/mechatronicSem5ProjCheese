@@ -281,7 +281,7 @@ void playerMode(bool demo) {
       joystickRValue = random(MIN_JVALR, MAX_JVALR);
     }
     */
-    delay(500);
+    //delay(500);
     joystickLValue = random(MIN_JVALL, MAX_JVALL);
     joystickRValue = random(MIN_JVALR, MAX_JVALR);
   }
