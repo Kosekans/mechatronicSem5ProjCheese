@@ -68,7 +68,7 @@ class GameController(QObject):
      
     def setBallInRocket(self, value: bool):
         self.gameState.ballInRocket = value
-        if not value:
+        if not value and self.gameState.active:
             self.checkHighScore
             self.gameState.reset
 
