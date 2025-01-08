@@ -36,6 +36,7 @@ class GameController(QObject):
 
     
     def setupGame(self):
+        self.gameState.active = True
         self.prepareRocket
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MODE']['follow']:
             pass
@@ -50,13 +51,30 @@ class GameController(QObject):
             self.gameState.active = True
             self.arduinoController.sendAntrieb("DEMO")
             self.arduinoController.sendZiel("DEMO")
-     
+        self.runGame()
+    
+    def runGame(self):
+        self.viewManager.navigateToPage('runningGame')
+    
+    def gameOver(self, won: bool):
+        self.checkHighScore
+        self.gameState.reset
+        if won:
+            self.viewManager.showSuccess(SUCCESS_MESSAGES['GAME_WON'])
+        if not won:
+            self.viewManager.showWarning(ERROR_MESSAGES['GAME_LOST'])
+    
+    def didGoofyAaaaahhPlayerWin(self):
+        self.arduinoController.sendAntrieb("COORDS")
+        currentCoords = self.arduinoController.getAntrieb()
+        return HelperFunctions.coordsMatchCheck(currentCoords, self.gameState.goalCoords, 50)
+
     def handleGpioInput(self, event: str):
         print(f"GameController received GPIO event: {event}") # Add debug print
         pin_actions = {
             'Start': self.clickStartGame,
-            'Ball lost': self.setBallInRocket(False),
-            'Ball detected': self.setBallInRocket(True)
+            'Ball lost': self.ballInRocket(False),
+            'Ball detected': self.ballInRocket(True)
         }
         
         action = pin_actions.get(event)
@@ -66,11 +84,10 @@ class GameController(QObject):
             except Exception as e:
                 self.viewManager.showWarning(str(e))
      
-    def setBallInRocket(self, value: bool):
+    def ballInRocket(self, value: bool):
         self.gameState.ballInRocket = value
         if not value and self.gameState.active:
-            self.checkHighScore
-            self.gameState.reset
+            self.gameOver(self.didGoofyAaaaahhPlayerWin())
 
     def checkHighScore(self):
         pass
@@ -134,7 +151,6 @@ class GameController(QObject):
         elif self.gameState.arduinoBusy:
             raise ValueError(ERROR_MESSAGES['ARDUINO_BUSY'])
         else:
-            self.gameState.active = True
             self.setupGame()
     
     def clickUpdatePorts(self):

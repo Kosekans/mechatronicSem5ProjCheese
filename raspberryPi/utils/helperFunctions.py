@@ -1,15 +1,7 @@
-import os
 import platform
-import sys
 import json
 import random
-
-# Get the current file's directory
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# Add the parent directory to the system path
-parent_dir = os.path.join(current_dir, '..')
-sys.path.append(parent_dir)
-from config.settings import RASPBERRY_PI_SETTINGS
+import os
 
 class HelperFunctions:
 
@@ -27,8 +19,13 @@ class HelperFunctions:
 
     @staticmethod
     def createGoalCoords():
-        # Load the JSON file
-        with open("coordinates.json", "r") as file:
+        # Get the directory of the current script
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Create the full path to coordinates.json
+        json_path = os.path.join(current_dir, "coordinates.json")
+        
+        # Load the JSON file with the full path
+        with open(json_path, "r") as file:
             coordinates = json.load(file)
         
         # Get the length of the coordinates list
@@ -39,7 +36,11 @@ class HelperFunctions:
         
         # Retrieve the random set of x/y coordinates
         random_coordinates = coordinates[random_index] #Form: Python Dictionary
+
+        coordsList = [random_coordinates['X'], random_coordinates['Y']]
         
-        #print(f"Random coordinates: X = {random_coordinates['X']}, Y = {random_coordinates['Y']}")
-        
-        return random_coordinates 
+        return coordsList
+    
+    @staticmethod
+    def coordsMatchCheck(coords1: list[int], coords2: list[int], tolerance: int) -> bool:
+        return abs(coords1[0] - coords2[0]) <= tolerance and abs(coords1[1] - coords2[1]) <= tolerance

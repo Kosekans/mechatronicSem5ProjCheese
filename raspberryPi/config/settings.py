@@ -59,11 +59,13 @@ ERROR_MESSAGES = {
     'NO_INTERNET_CONNECTION': 'No internet connection found, could not update repository. Check the connection and retart to update',
     'UPDATE_FAILED': 'Failed to update repository',
     'RUNNING_GAME': 'Game is already running',
-    'ARDUINOS_BUSY': 'Arduinos are not ready, wait a moment'
+    'ARDUINOS_BUSY': 'Arduinos are not ready, wait a moment',
+    'GAME_LOST': 'you lost, maybe you succeed next time'
 }
 SUCCESS_MESSAGES = {
     'HARDWARE_INITIALIZED': 'Hardware initialized successfully',
     'PORTS_UPDATED': 'Ports updated successfully',
     'UPDATED': 'Repository updated successfully',
-    'NULL_ANTRIEB': 'Nulling motors successfully'
+    'NULL_ANTRIEB': 'Nulling motors successfully',
+    'GAME_WON': 'you won, congratulations'
 }
