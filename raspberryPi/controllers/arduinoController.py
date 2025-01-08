@@ -50,10 +50,10 @@ class ArduinoController:
             return False
     
     def sendAntrieb(self, x: str):
-        self.arduinoAntrieb.writeSerial(x)
+        self.arduinoAntrieb.writeSerial(x + '\n')
 
     def sendZiel(self, x: str):
-        self.arduinoZielsystem.writeSerial(x)
+        self.arduinoZielsystem.writeSerial(x + '\n')
 
     def getAntrieb(self):
         return self.arduinoAntrieb.readSerialLine()
