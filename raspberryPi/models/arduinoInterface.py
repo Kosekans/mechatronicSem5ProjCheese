@@ -48,6 +48,7 @@ class ArduinoInterface:
         print("connected ports:", ", ".join(connectedPorts))
         for port in connectedPorts:
             print("testing port", port)
+            # Make sure to send ID with newline
             answer: str = SerialCommunication.testComunication(
                 port,
                 self.baudRate,
@@ -57,7 +58,7 @@ class ArduinoInterface:
                 'ID\n'
             )
             print("serial test connection answer: ", answer)
-            if answer == self.id:
+            if answer and answer.strip() == self.id:  # Add null check and strip whitespace
                 self.port = port
                 return True
         print(self.id, "Arduino not found")

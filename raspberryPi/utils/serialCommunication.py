@@ -33,19 +33,34 @@ class SerialCommunication:
         try:
             testConnection = serial.Serial(port, baudRate, timeout=timeout, bytesize=bytesize)
             if testConnection:
-                print("created serial test connection succsesfully")
-                # Add small delay for Arduino to reset
-                time.sleep(0.5)
-                testConnection.write(bytes(message + '\n', characterEncoding))
+                print("created serial test connection successfully")
+                # Add longer delay for Arduino to reset
+                time.sleep(2)
+                
+                # Clear any existing data in the buffer
+                testConnection.reset_input_buffer()
+                testConnection.reset_output_buffer()
+                
+                # Write the message
+                testConnection.write(bytes(message, characterEncoding))
                 print("write done")
                 testConnection.flush()
                 print("flush done")
-                testConnection.timeout = 0.5
-                answer = testConnection.readline()
-                print("read done")
-                if not answer:  # If no response received before timeout
+                
+                # Wait a bit for Arduino to process and respond
+                time.sleep(0.1)
+                
+                # Read with timeout
+                testConnection.timeout = 1  # Set timeout to 1 second
+                try:
+                    answer = testConnection.readline()
+                    print("read done")
+                    if answer:
+                        return answer.decode(characterEncoding).strip()
+                except serial.SerialTimeoutException:
                     return "no response"
-                return answer.decode(characterEncoding).strip()
+                    
+                return "no response"
             else:
                 return "could not create serial test connection"
         except serial.SerialException as e:
