@@ -23,6 +23,9 @@ int velocity; // in mm/s. This is a pseudo velocity as it does not take in to a 
 int targetX;
 int targetY;
 
+float stretchX = 1.1;
+int offsetY = 50;
+
 bool targetChanged = true; // Has to be true to trigger the calculations for the first time.
 
 int mode; // holds the current Mode. This is partially set by the serial input
@@ -41,10 +44,11 @@ FireTimer intervalServoPlus;
 
 void setup(){
 
+  Serial.begin(9600);
+  Serial.setTimeout(10);
+
   pinMode(12, OUTPUT); // Relais Pin
   digitalWrite(12, HIGH); // Turn off Power to Servos
-
-  Serial.begin(9600);
 
   servoMinus.attach(9, 500, 2500);
   servoPlus.attach(10, 500, 2500);
@@ -105,8 +109,8 @@ void checkForInput() {
         yCoordStr = input.substring(firstSlash + 1, secondSlash);
         velocityStr = input.substring(secondSlash + 1);
 
-        x = xCoordStr.toInt();
-        y = yCoordStr.toInt();
+        x = xCoordStr.toInt() * stretchX;
+        y = yCoordStr.toInt() + offsetY;
         tempVelocity = velocityStr.toInt();
 
         Serial.print("Registered X: ");
@@ -161,7 +165,9 @@ void checkForInput() {
     } else if(input == "DEMO") {
       demoEnabled = true;
       mode = 6;
-    } 
+    } else if (input == "ID"){
+      Serial.println("chaesZielsystem");
+    }
     else {
       Serial.println("Error: Unknown command");
     }
