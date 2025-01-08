@@ -27,6 +27,7 @@ class GameState:
         self.randomLatency: bool = GAME_SETTINGS['GAME_BOOLS_DEFAULT']['randomLatencyDefault']
         self.ballInRocket: bool = False
         self.arduinoBusy: bool = False
+        self.timePlayed = 0
         
     def reset(self):
         self.portsFound: bool = False
@@ -45,6 +46,7 @@ class GameState:
         self.randomLatency: bool = GAME_SETTINGS['GAME_BOOLS_DEFAULT']['randomLatencyDefault']
         self.ballInRocket: bool = False
         self.arduinoBusy: bool = False
+        self.timePlayed = 0
 
     def goalCoordsToString(self):
         return "{}/{}/{}".format(self.goalCoords[0], self.goalCoords[1], self.goalCoordsVelo)

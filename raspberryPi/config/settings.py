@@ -68,5 +68,6 @@ SUCCESS_MESSAGES = {
     'PORTS_UPDATED': 'Ports updated successfully',
     'UPDATED': 'Repository updated successfully',
     'NULL_ANTRIEB': 'Nulling motors successfully',
-    'GAME_WON': 'you won, congratulations'
+    'GAME_WON': 'you won, congratulations',
+    'GAME_ENDED_WITH_TIME': 'congradulations, you lasted '
 }

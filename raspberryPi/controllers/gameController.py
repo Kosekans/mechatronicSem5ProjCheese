@@ -1,6 +1,7 @@
 import sys
 import os
 from PyQt5.QtCore import QObject, pyqtSignal
+import time
 
 # Get the current file's directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +24,7 @@ class GameController(QObject):
         self.viewManager = viewManager
         self.arduinoController = arduinoController
         self.gpioPinsController = gpioPinsController
+        self.startTime = None
         
         # Initialize hardware state
         self.gameState.portsFound = False
@@ -33,54 +35,77 @@ class GameController(QObject):
             self.gameState.portsFound = True
             if self.arduinoController.initializeHardware():
                 self.gameState.hardwareInitialized = True
-
     
     def setupGame(self):
         self.gameState.active = True
-        self.prepareRocket
+        self.prepareRocket()
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MODE']['follow']:
             initGoalCoords = [0, 150]
             self.gameState.goalCoords = initGoalCoords
+            self.runGame()
             while self.compareCoords():
                 self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
-                self.gameState.goalCoords = HelperFunctions.createFollowCoords(self.gameState.goalCoords, 10)
-            self.gameOver(False)
+                self.gameState.goalCoords = HelperFunctions.createFollowCoords(self.gameState.goalCoords, 50)
+            self.gameOver()
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
             self.gameState.goalCoords = HelperFunctions.createGoalCoords()
             self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
+            self.runGame()
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
             pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
-            pass#todo
+            pass
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['demo']:
             self.gameState.active = True
             self.arduinoController.sendAntrieb("DEMO")
             self.arduinoController.sendZiel("DEMO")
-        self.runGame()
-    
+        
     def runGame(self):
         self.arduinoController.sendAntrieb("PLAY")
         self.viewManager.navigateToPage('runningGame')
+        self.startTime = time.time()
     
-    def gameOver(self, won: bool):
-        self.checkHighScore
+    def gameOver(self):
+        self.gameState.timePlayed = time.time() - self.startTime
+        timeMessage = SUCCESS_MESSAGES['GAME_ENDED_WITH_TIME'] + str(self.gameState.timePlayed)
+        self.checkHighScore()
+        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODE']['follow']:
+            self.viewManager.showSuccess(timeMessage)
+        elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
+            if self.compareCoords():
+                self.viewManager.showSuccess(SUCCESS_MESSAGES['GAME_WON'])
+            else:
+                self.viewManager.showWarning(ERROR_MESSAGES['GAME_LOST'])
+        elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
+            pass
+        elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
+            pass
         self.clickAbortGame()
-        if won:
-            self.viewManager.showSuccess(SUCCESS_MESSAGES['GAME_WON'])
-        if not won:
-            self.viewManager.showWarning(ERROR_MESSAGES['GAME_LOST'])
-    
-    def didGoofyAaaaahhPlayerWin(self):
-        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
-            return self.compareCoords()
-        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['follow']:
-            return False
+        self.viewManager.navigateToPage('main')
     
     def compareCoords(self):
         self.arduinoController.sendAntrieb("COORDS")
         currentCoords = self.arduinoController.getAntrieb()
         return HelperFunctions.coordsMatchCheck(currentCoords, self.gameState.goalCoords, 50)
+
+    def checkHighScore(self):
+        pass
     
+    def clickAbortGame(self):
+        self.gameState.reset
+        self.prepareRocket()
+
+    def prepareRocket(self):
+        self.gameState.arduinoBusy = True
+        self.arduinoController.sendAntrieb(self.gameState.getInfoForAntrieb)
+        self.arduinoController.sendAntrieb("EJECTPOS")
+        while self.gameState.ballInRocket == False:
+            pass
+        self.arduinoController.sendAntrieb("STARTPOS")
+        while self.arduinoController.getAntrieb != "DONE":
+            self.gameState.arduinoBusy = True
+        self.gameState.arduinoBusy = False
+        
     def handleGpioInput(self, event: str):
         print(f"GameController received GPIO event: {event}") # Add debug print
         pin_actions = {
@@ -95,26 +120,24 @@ class GameController(QObject):
                 action()
             except Exception as e:
                 self.viewManager.showWarning(str(e))
-     
+    
     def ballInRocket(self, value: bool):
         self.gameState.ballInRocket = value
         if not value and self.gameState.active:
-            self.gameOver(self.didGoofyAaaaahhPlayerWin())
-
-    def checkHighScore(self):
-        pass
-
-    def prepareRocket(self):
-        self.gameState.arduinoBusy = True
-        self.arduinoController.sendAntrieb(self.gameState.getInfoForAntrieb)
-        self.arduinoController.sendAntrieb("EJECTPOS")
-        while self.gameState.ballInRocket == False:
-            pass
-        self.arduinoController.sendAntrieb("STARTPOS")
-        while self.arduinoController.getAntrieb != "DONE":
-            self.gameState.arduinoBusy = True
-        self.gameState.arduinoBusy = False
-        
+            self.gameOver()
+    
+    def clickStartGame(self):
+        # Validate game state before proceeding
+        if self.gameState.gameMode is None:
+            raise ValueError(ERROR_MESSAGES['NO_GAME_MODE_SELECTED'])
+        elif not self.gameState.hardwareInitialized:
+            raise ValueError(ERROR_MESSAGES['HARDWARE_NOT_INITIALIZED'])
+        elif self.gameState.active:
+            raise ValueError(ERROR_MESSAGES['RUNNING_GAME'])
+        elif self.gameState.arduinoBusy:
+            raise ValueError(ERROR_MESSAGES['ARDUINO_BUSY'])
+        else:
+            self.setupGame()
 
     def handleButtonClicked(self, buttonId: str):
         # Dictionary to map button IDs to their corresponding methods
@@ -134,10 +157,6 @@ class GameController(QObject):
             except Exception as e:
                 # Show error to user through ViewManager
                 self.viewManager.showWarning(str(e))
-    
-    def clickAbortGame(self):
-        self.gameState.reset
-        self.prepareRocket()
 
     def getGameStateInfo(self):
         """Return current game state as a dictionary for UI updates"""
@@ -151,20 +170,7 @@ class GameController(QObject):
             'randomLatency': self.gameState.randomLatency
         }
 
-    #buttons from GUI
-    def clickStartGame(self):
-        # Validate game state before proceeding
-        if self.gameState.gameMode is None:
-            raise ValueError(ERROR_MESSAGES['NO_GAME_MODE_SELECTED'])
-        elif not self.gameState.hardwareInitialized:
-            raise ValueError(ERROR_MESSAGES['HARDWARE_NOT_INITIALIZED'])
-        elif self.gameState.active:
-            raise ValueError(ERROR_MESSAGES['RUNNING_GAME'])
-        elif self.gameState.arduinoBusy:
-            raise ValueError(ERROR_MESSAGES['ARDUINO_BUSY'])
-        else:
-            self.setupGame()
-    
+    #buttons from GUI    
     def clickUpdatePorts(self):
         # Update ports for serial communication
         if self.arduinoController.updatePorts() is False:
