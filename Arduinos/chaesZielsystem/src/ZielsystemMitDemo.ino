@@ -23,6 +23,9 @@ int velocity; // in mm/s. This is a pseudo velocity as it does not take in to a 
 int targetX;
 int targetY;
 
+float stretchX = 1.1;
+int offsetY = 50;
+
 bool targetChanged = true; // Has to be true to trigger the calculations for the first time.
 
 int mode; // holds the current Mode. This is partially set by the serial input
@@ -41,10 +44,11 @@ FireTimer intervalServoPlus;
 
 void setup(){
 
+  Serial.begin(9600);
+  Serial.setTimeout(10);
+
   pinMode(12, OUTPUT); // Relais Pin
   digitalWrite(12, HIGH); // Turn off Power to Servos
-
-  Serial.begin(9600);
 
   servoMinus.attach(9, 500, 2500);
   servoPlus.attach(10, 500, 2500);
@@ -105,8 +109,8 @@ void checkForInput() {
         yCoordStr = input.substring(firstSlash + 1, secondSlash);
         velocityStr = input.substring(secondSlash + 1);
 
-        x = xCoordStr.toInt();
-        y = yCoordStr.toInt();
+        x = xCoordStr.toInt() * stretchX;
+        y = yCoordStr.toInt() + offsetY;
         tempVelocity = velocityStr.toInt();
 
         Serial.print("Registered X: ");
@@ -118,8 +122,14 @@ void checkForInput() {
         Serial.print("Registered velocity: ");
         Serial.println(velocity);
 
+        mode = 3;  
+        targetX = x;
+        targetY = y;
+        velocity = tempVelocity;
+        targetChanged = true;
 
-        if (isLegalCoordinate(x, y)) {
+
+        /*if (isLegalCoordinate(x, y)) {
           mode = 3;
           targetX = x;
           targetY = y;
@@ -127,7 +137,7 @@ void checkForInput() {
           targetChanged = true;
         } else {
           Serial.println("Error: Illegal coordinates");
-        }
+        }*/
       }
     } else if (input == "STOP") {
       mode = 1;
@@ -161,16 +171,18 @@ void checkForInput() {
     } else if(input == "DEMO") {
       demoEnabled = true;
       mode = 6;
-    } 
+    } else if (input == "ID"){
+      Serial.println("chaesZielsystem");
+    }
     else {
       Serial.println("Error: Unknown command");
     }
   }
 }
 
-// Function to validate coordinates
+// DEFUNCT Function to validate coordinates
 bool isLegalCoordinate(int x, int y) {
-    // Replace these with the actual valid ranges for x and y
+    // DEFUNCT
     int minX = -255, maxX = 255;
     int minY = 200, maxY = 600;
 
@@ -249,7 +261,7 @@ void transport(){
 }
 
 void demo(){
-  targetX = random(-200, 200);
+  targetX = random(-200, 200); // This validates Coordinates in DEMO Mode
   targetY = random(200, 600);
 
   velocity = 200;
