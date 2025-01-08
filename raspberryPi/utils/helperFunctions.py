@@ -88,5 +88,21 @@ class HelperFunctions:
             
             current_step += 1  # Increase step size if no valid coordinates found
 
-if __name__ == "__main__":
-    print(HelperFunctions.createFollowCoords(210,100,10))
+    @staticmethod
+    def createFollowCoords(previous: list[int], step):
+        previousX = previous[0]
+        previousY = previous[1]
+        halfBoardWidth = 533/2
+        boardHeight = 770
+        if previousX < -halfBoardWidth + step:
+            newX = previousX + step
+        elif previousX > halfBoardWidth - step:
+            newX = previousX - step
+        elif previousY < step:
+            newY = previousY + step
+        elif previousY > boardHeight - step:
+            newY = previousY - step
+        else:
+            newX = previousX + random.choice([step, -step, 0])
+            newY = previousY + random.choice([step, -step, 0])
+        return [newX, newY]
