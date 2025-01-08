@@ -89,7 +89,7 @@ class HelperFunctions:
             current_step += 1  # Increase step size if no valid coordinates found
 
     @staticmethod
-    def createFollowCoords(previous: list[int], step):
+    def createInverseFollowCoords(previous: list[int], step):
         previousX = previous[0]
         previousY = previous[1]
         halfBoardWidth = 533/2
