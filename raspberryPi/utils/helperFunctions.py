@@ -78,7 +78,7 @@ class HelperFunctions:
                 
                 collision = False
                 for coord in coordinates:
-                    if HelperFunctions.coordsMatchCheck(newCoords, [coord['X'], coord['Y']], 50):
+                    if HelperFunctions.coordsMatchCheck(newCoords, [coord['X'], coord['Y']], 25):
                         collision = True
                         break
                 
