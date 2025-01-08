@@ -61,7 +61,9 @@ ERROR_MESSAGES = {
     'UPDATE_FAILED': 'Failed to update repository',
     'RUNNING_GAME': 'Game is already running',
     'ARDUINOS_BUSY': 'Arduinos are not ready, wait a moment',
-    'GAME_LOST': 'you lost, maybe you succeed next time'
+    'BALL_LOST': 'you lost your bagage, drive your rocket more carefully next time',
+    'STAR_AWAY': 'your star run away from you, try to keep catching up next time',
+    'STAR_CATCHED_UP': 'the star catched up with you, try avoiding it next time',
 }
 SUCCESS_MESSAGES = {
     'HARDWARE_INITIALIZED': 'Hardware initialized successfully',

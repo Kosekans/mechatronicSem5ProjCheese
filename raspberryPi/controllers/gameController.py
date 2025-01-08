@@ -39,22 +39,32 @@ class GameController(QObject):
     def setupGame(self):
         self.gameState.active = True
         self.prepareRocket()
+
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MODE']['follow']:
             initGoalCoords = [0, 150]
             self.gameState.goalCoords = initGoalCoords
             self.runGame()
-            while self.compareCoords():
+            while self.compareCoordsIfEqual(50):
                 self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
                 self.gameState.goalCoords = HelperFunctions.createFollowCoords(self.gameState.goalCoords, 50)
-            self.gameOver()
+            self.gameOver(False)
+
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
             self.gameState.goalCoords = HelperFunctions.createGoalCoords()
             self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
             self.runGame()
+
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
-            pass
+            pass#todo
+
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
-            pass
+            self.arduinoController.sendAntrieb("COORDS")
+            self.gameState.goalCoords = HelperFunctions.makeGoalCoordsLegal(self.arduinoController.getAntrieb())
+            self.runGame()
+            while not self.compareCoordsIfEqual(50):
+                self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
+            self.gameOver(False)
+
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['demo']:
             self.gameState.active = True
             self.arduinoController.sendAntrieb("DEMO")
@@ -65,28 +75,41 @@ class GameController(QObject):
         self.viewManager.navigateToPage('runningGame')
         self.startTime = time.time()
     
-    def gameOver(self):
+    def gameOver(self, triggeredFromBallLost: bool):
         self.gameState.timePlayed = time.time() - self.startTime
         timeMessage = SUCCESS_MESSAGES['GAME_ENDED_WITH_TIME'] + str(self.gameState.timePlayed)
         self.checkHighScore()
-        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODE']['follow']:
+
+        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['follow']:
+            if triggeredFromBallLost:
+                self.viewManager.showWarning(ERROR_MESSAGES['BALL_LOST'])
+            else:
+                self.viewManager.showWarning(ERROR_MESSAGES['STAR_AWAY'])
             self.viewManager.showSuccess(timeMessage)
+
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
-            if self.compareCoords():
+            if self.compareCoordsIfEqual():
                 self.viewManager.showSuccess(SUCCESS_MESSAGES['GAME_WON'])
             else:
-                self.viewManager.showWarning(ERROR_MESSAGES['GAME_LOST'])
+                self.viewManager.showWarning(ERROR_MESSAGES['BALL_LOST'])
+
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
-            pass
+            pass#todo
+
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
-            pass
+            if triggeredFromBallLost:
+                self.viewManager.showWarning(ERROR_MESSAGES['BALL_LOST'])
+            else:
+                self.viewManager.showWarning(SUCCESS_MESSAGES['STAR_CATCHED_UP'])
+            self.viewManager.showSuccess(timeMessage)
+
         self.clickAbortGame()
         self.viewManager.navigateToPage('main')
     
-    def compareCoords(self):
+    def compareCoordsIfEqual(self, tolerance):
         self.arduinoController.sendAntrieb("COORDS")
         currentCoords = self.arduinoController.getAntrieb()
-        return HelperFunctions.coordsMatchCheck(currentCoords, self.gameState.goalCoords, 50)
+        return HelperFunctions.coordsMatchCheck(currentCoords, self.gameState.goalCoords, tolerance)
 
     def checkHighScore(self):
         pass
@@ -124,7 +147,7 @@ class GameController(QObject):
     def ballInRocket(self, value: bool):
         self.gameState.ballInRocket = value
         if not value and self.gameState.active:
-            self.gameOver()
+            self.gameOver(True)
     
     def clickStartGame(self):
         # Validate game state before proceeding

@@ -89,20 +89,21 @@ class HelperFunctions:
             current_step += 1  # Increase step size if no valid coordinates found
 
     @staticmethod
-    def createInverseFollowCoords(previous: list[int], step):
-        previousX = previous[0]
-        previousY = previous[1]
-        halfBoardWidth = 533/2
-        boardHeight = 770
-        if previousX < -halfBoardWidth + step:
-            newX = previousX + step
-        elif previousX > halfBoardWidth - step:
-            newX = previousX - step
-        elif previousY < step:
-            newY = previousY + step
-        elif previousY > boardHeight - step:
-            newY = previousY - step
-        else:
-            newX = previousX + random.choice([step, -step, 0])
-            newY = previousY + random.choice([step, -step, 0])
-        return [newX, newY]
+    def makeGoalCoordsLegal(coords: list[int]) -> list[int]:
+        x, y = coords[0], coords[1]
+        distance_from_center = (x*x + y*y) ** 0.5
+        
+        if distance_from_center < 150:
+            # Special case for (0,0) to avoid division by zero
+            if distance_from_center == 0:
+                return [0, 150]  # Return a point on the circle boundary
+            
+            # Scale the point to lie on the circle boundary
+            scale_factor = 150 / distance_from_center
+            coords[0] = int(x * scale_factor)
+            coords[1] = int(y * scale_factor)
+            
+        return coords
+
+if __name__ == "__main__":
+    print(HelperFunctions.makeGoalCoordsLegal([1, 1]))
