@@ -11,6 +11,20 @@ Window {
     title: windowTitle
     visibility: Window.FullScreen
 
+    // Global theme properties
+    property QtObject theme: QtObject {
+        property color backgroundColor: "#1a1b2e"  // Dark blue night sky
+        property color buttonColor: "#2e344f"      // Moon surface color
+        property color buttonHoverColor: "#3d4266" // Lighter moon surface
+        property color textColor: "#e1e1ff"        // Soft white moonlight
+        property color accentColor: "#8585ad"      // Lunar glow
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        color: theme.backgroundColor
+    }
+
     Loader {
         id: pageLoader
         anchors.fill: parent

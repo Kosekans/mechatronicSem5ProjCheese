@@ -10,31 +10,38 @@ Item {
 
     GridLayout {
         anchors.fill: parent
-        columns: 4
-        rows: 1
+        anchors.margins: 20
+        columns: 2
+        rows: 2
+        rowSpacing: 20
+        columnSpacing: 20
         
-        Button {
-            text: "Set Game Mode"
+        CustomButton {
+            text: "Set Game\nMode"
             Layout.fillWidth: true
             Layout.fillHeight: true
+            font.pixelSize: 24
             onClicked: viewManager.onPageChangeClick("setGameMode")
         }
-        Button {
+        CustomButton {
             text: "Settings"
             Layout.fillWidth: true
             Layout.fillHeight: true
+            font.pixelSize: 24
             onClicked: viewManager.onPageChangeClick("settings")
         }
-        Button {
+        CustomButton {
             text: "Credits"
             Layout.fillWidth: true
             Layout.fillHeight: true
+            font.pixelSize: 24
             onClicked: viewManager.onPageChangeClick("credits")
         }
-        Button {
+        CustomButton {
             text: "Highscore"
             Layout.fillWidth: true
             Layout.fillHeight: true
+            font.pixelSize: 24
             onClicked: viewManager.onPageChangeClick("highscore")
         }
     }

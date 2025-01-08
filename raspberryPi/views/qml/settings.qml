@@ -9,32 +9,42 @@ Item {
 
     GridLayout {
         anchors.centerIn: parent
-        width: parent.width * 0.8
-        columns: 4
-        rowSpacing: 10
-        columnSpacing: 10
+        width: parent.width * 0.9
+        height: parent.height * 0.8
+        columns: 2
+        rows: 2
+        rowSpacing: 20
+        columnSpacing: 20
 
-        Button {
+        CustomButton {
             text: "Back"
             Layout.fillWidth: true
+            Layout.fillHeight: true
+            font.pixelSize: 24
             onClicked: viewManager.onPageChangeClick("back")
         }
 
-        Button {
-            text: "null the motors"
+        CustomButton {
+            text: "null the\nmotors"
             Layout.fillWidth: true
+            Layout.fillHeight: true
+            font.pixelSize: 24
             onClicked: viewManager.onButtonClick("null")
         }
 
-        Button {
-            text: "Update Ports"
+        CustomButton {
+            text: "Update\nPorts"
             Layout.fillWidth: true
+            Layout.fillHeight: true
+            font.pixelSize: 24
             onClicked: viewManager.onButtonClick("updatePorts")
         }
 
-        Button {
-            text: "Initialize Serial Comunication with Arduinos"
+        CustomButton {
+            text: "Initialize Serial\nComunication\nwith Arduinos"
             Layout.fillWidth: true
+            Layout.fillHeight: true
+            font.pixelSize: 24
             onClicked: viewManager.onButtonClick("initializeHardware")
         }
     }

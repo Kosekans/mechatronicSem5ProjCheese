@@ -7,14 +7,22 @@ Item {
     anchors.fill: parent
 
     GridLayout {
-        anchors.centerIn: parent
-        width: parent.width * 0.8
+        anchors.fill: parent
+        anchors.margins: 20
         columns: 1
-        rowSpacing: 10
+        rowSpacing: 20
 
-        Button {
-            text: "Back"
+        Item {
+            Layout.fillHeight: true
             Layout.fillWidth: true
+        }
+
+        CustomButton {
+            text: "Back"
+            Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 60
+            font.pixelSize: 24
             onClicked: viewManager.onPageChangeClick("back")
         }
     }
