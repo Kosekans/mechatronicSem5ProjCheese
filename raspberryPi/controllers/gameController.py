@@ -39,7 +39,12 @@ class GameController(QObject):
         self.gameState.active = True
         self.prepareRocket
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MODE']['follow']:
-            pass
+            initGoalCoords = [0, 150]
+            self.gameState.goalCoords = initGoalCoords
+            while self.compareCoords():
+                self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
+                self.gameState.goalCoords = HelperFunctions.createFollowCoords(self.gameState.goalCoords, 10)
+            self.gameOver(False)
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
             self.gameState.goalCoords = HelperFunctions.createGoalCoords()
             self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
@@ -54,6 +59,7 @@ class GameController(QObject):
         self.runGame()
     
     def runGame(self):
+        self.arduinoController.sendAntrieb("PLAY")
         self.viewManager.navigateToPage('runningGame')
     
     def gameOver(self, won: bool):
@@ -65,10 +71,16 @@ class GameController(QObject):
             self.viewManager.showWarning(ERROR_MESSAGES['GAME_LOST'])
     
     def didGoofyAaaaahhPlayerWin(self):
+        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
+            return self.compareCoords()
+        if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['follow']:
+            return False
+    
+    def compareCoords(self):
         self.arduinoController.sendAntrieb("COORDS")
         currentCoords = self.arduinoController.getAntrieb()
         return HelperFunctions.coordsMatchCheck(currentCoords, self.gameState.goalCoords, 50)
-
+    
     def handleGpioInput(self, event: str):
         print(f"GameController received GPIO event: {event}") # Add debug print
         pin_actions = {

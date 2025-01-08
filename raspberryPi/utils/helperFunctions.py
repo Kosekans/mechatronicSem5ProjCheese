@@ -51,7 +51,9 @@ class HelperFunctions:
         return abs(coords1[0] - coords2[0]) <= tolerance and abs(coords1[1] - coords2[1]) <= tolerance
     
     @staticmethod
-    def createFollowCoords(previousX: int, previousY: int, step) -> list[int]:
+    def createFollowCoords(previous: list[int], step) -> list[int]:
+        previousX = previous[0]
+        previousY = previous[1]
         coordinates = HelperFunctions.getCoordinates()
         halfBoardWidth = 533/2
         boardHeight = 770

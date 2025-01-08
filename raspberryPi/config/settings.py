@@ -46,7 +46,8 @@ GAME_SETTINGS = {
     },
     'GAME_VALUES_DEFAULT': {
         'rocketVelocityDefault': 1, #[0,1]
-        'latencyDefault': 0 #ms
+        'latencyDefault': 0, #ms,
+        'goalCoordsVeloDefault': 300
     }
 }
 

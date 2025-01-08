@@ -17,7 +17,7 @@ class GameState:
         self.chaesAntriebCoords: str = None
         self.chaesAntriebModus: str = None
         self.goalCoords: list[int] = None
-        self.goalCoordsVelo: int = None
+        self.goalCoordsVelo: int = GAME_SETTINGS['GAME_VALUES_DEFAULT']['goalCoordsVeloDefault']
         self.gameMode: str = None
         self.inverseSticks: bool =  GAME_SETTINGS['GAME_BOOLS_DEFAULT']['inverseSticksDefault']
         self.rocketVelocity: float = GAME_SETTINGS['GAME_VALUES_DEFAULT']['rocketVelocityDefault'] #[0,1]
@@ -35,7 +35,7 @@ class GameState:
         self.chaesAntriebCoords: str = None
         self.chaesAntriebModus: str = None
         self.goalCoords: list[int] = None
-        self.goalCoordsVelo: int = None
+        self.goalCoordsVelo: int = GAME_SETTINGS['GAME_VALUES_DEFAULT']['goalCoordsVeloDefault']
         self.gameMode: str = None
         self.inverseSticks: bool =  GAME_SETTINGS['GAME_BOOLS_DEFAULT']['inverseSticksDefault']
         self.rocketVelocity: float = GAME_SETTINGS['GAME_VALUES_DEFAULT']['rocketVelocityDefault'] #[0,1]
