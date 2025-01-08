@@ -122,8 +122,14 @@ void checkForInput() {
         Serial.print("Registered velocity: ");
         Serial.println(velocity);
 
+        mode = 3;  
+        targetX = x;
+        targetY = y;
+        velocity = tempVelocity;
+        targetChanged = true;
 
-        if (isLegalCoordinate(x, y)) {
+
+        /*if (isLegalCoordinate(x, y)) {
           mode = 3;
           targetX = x;
           targetY = y;
@@ -131,7 +137,7 @@ void checkForInput() {
           targetChanged = true;
         } else {
           Serial.println("Error: Illegal coordinates");
-        }
+        }*/
       }
     } else if (input == "STOP") {
       mode = 1;
@@ -174,9 +180,9 @@ void checkForInput() {
   }
 }
 
-// Function to validate coordinates
+// DEFUNCT Function to validate coordinates
 bool isLegalCoordinate(int x, int y) {
-    // Replace these with the actual valid ranges for x and y
+    // DEFUNCT
     int minX = -255, maxX = 255;
     int minY = 200, maxY = 600;
 
@@ -255,7 +261,7 @@ void transport(){
 }
 
 void demo(){
-  targetX = random(-200, 200);
+  targetX = random(-200, 200); // This validates Coordinates in DEMO Mode
   targetY = random(200, 600);
 
   velocity = 200;
