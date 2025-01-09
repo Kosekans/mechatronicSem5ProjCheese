@@ -446,14 +446,12 @@ void regulateSpeed(int delta, bool left) {
 }
 
 void calculateCoords(int distance, int left, int right) {
-  //Cathetics theorem and Euclid's altitude theorem
-  //Serial.println("distance " + String(distance) + " left " + String(left) + " right " + String(right));
-  float p = left * left / distance;
-  float q = right * right / distance;
-  int h = sqrt(p*q);
-  coords[0] = BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX - p;
-  coords[1] = BOARD_HIGHT + FEED_THROUGH_OFFSETY - h;
-  Serial.println("p " + String(p) + " q " + String(q) + " h " + String(h));
+  //x,y nullpunkt oben links
+  distance -= 55;
+  int x = round((left * left - right * right + distance * distance) / (2 * distance));
+  int y = sqrt(x * x - left * left);
+  coords[0] = x + BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX;
+coords[1] = y - (BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15);
 }
 
 void boxCoords(int leftBorder, int rightBorder, int lowerBorder,
