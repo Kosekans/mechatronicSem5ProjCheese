@@ -454,9 +454,9 @@ void calculateCoords(int distance, int left, int right) {
   //x,y nullpunkt oben links
   distance -= 55;
   int x = round((left * left - right * right + distance * distance) / (2 * distance));
-  int y = sqrt(x * x - left * left);
-  coords[0] = x + BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX;
-  coords[1] = y - (BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15);
+  int y = round(sqrt(x * x - left * left));
+  coords[0] = x - (round(BOARD_WIDTH / 2) + FEED_THROUGH_OFFSETX);
+  coords[1] = y + BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15;
   //Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]));
 }
 
