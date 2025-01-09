@@ -1,8 +1,20 @@
 [Unit]
+Description=Raspberry Pi Qt Application
 After=graphical.target
+Wants=graphical.target
 
 [Service]
-ExecStart=/home/chaes/mechatronicSem5ProjCheese/raspberryPi/main.py
+Type=simple
+User=chaes
+Group=chaes
+WorkingDirectory=/home/chaes/mechatronicSem5ProjCheese/raspberryPi
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/chaes/.Xauthority
+Environment=QT_QPA_PLATFORM=xcb
+Environment=QT_PLUGIN_PATH=/usr/lib/qt/plugins
+ExecStart=/usr/bin/python3 /home/chaes/mechatronicSem5ProjCheese/raspberryPi/main.py
+Restart=on-failure
+RestartSec=5
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical.target
