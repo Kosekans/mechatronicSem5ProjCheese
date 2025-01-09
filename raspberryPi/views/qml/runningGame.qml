@@ -12,9 +12,12 @@ Item {
         columns: 1
         rowSpacing: 20
 
-        Item {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
+        Text {
+            text: "GO"
+            Layout.alignment: Qt.AlignCenter
+            font.pixelSize: 200
+            font.bold: true
+            color: "green"
         }
 
         CustomButton {

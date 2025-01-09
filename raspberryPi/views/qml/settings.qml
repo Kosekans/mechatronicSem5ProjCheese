@@ -9,7 +9,7 @@ Item {
 
     GridLayout {
         anchors.centerIn: parent
-        width: parent.width * 0.9
+        width: parent.width * 0.8
         height: parent.height * 0.8
         columns: 2
         rows: 2
@@ -17,19 +17,19 @@ Item {
         columnSpacing: 20
 
         CustomButton {
-            text: "Back"
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            font.pixelSize: 24
-            onClicked: viewManager.onPageChangeClick("back")
-        }
-
-        CustomButton {
-            text: "null the\nmotors"
+            text: "Null the\nmotors"
             Layout.fillWidth: true
             Layout.fillHeight: true
             font.pixelSize: 24
             onClicked: viewManager.onButtonClick("null")
+        }
+
+        CustomButton {
+            text: "Transportmode\ntight the strings"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            font.pixelSize: 24
+            onClicked: viewManager.onButtonClick("transport")
         }
 
         CustomButton {
@@ -46,6 +46,15 @@ Item {
             Layout.fillHeight: true
             font.pixelSize: 24
             onClicked: viewManager.onButtonClick("initializeHardware")
+        }
+
+        CustomButton {
+            text: "Back"
+            Layout.alignment: Qt.AlignBottom | Qt.AlignHCenter
+            Layout.preferredWidth: 200
+            Layout.preferredHeight: 60
+            font.pixelSize: 24
+            onClicked: viewManager.onPageChangeClick("back")
         }
     }
 }

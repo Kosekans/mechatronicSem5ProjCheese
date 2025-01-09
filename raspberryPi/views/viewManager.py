@@ -51,6 +51,7 @@ class ViewManager(QObject):
         self.setupPages()
         self.setupUI()
         self.initErrorMessages()
+        self.navigateToPage('popUpHighscore')
 
     def initErrorMessages(self):
         if not self.internetConnection:

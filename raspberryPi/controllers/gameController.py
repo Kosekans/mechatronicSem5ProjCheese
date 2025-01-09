@@ -169,7 +169,8 @@ class GameController(QObject):
             'updatePorts': self.clickUpdatePorts,
             'initializeHardware': self.clickInitializeHardware,
             'null': self.clickNullAntrieb,
-            'abort': self.clickAbortGame
+            'abort': self.clickAbortGame,
+            'transport': self.clickTransport
         }
         
         # Call the corresponding method if button ID exists
@@ -193,7 +194,13 @@ class GameController(QObject):
             'randomLatency': self.gameState.randomLatency
         }
 
-    #buttons from GUI    
+    #buttons from GUI
+    def clickTransport(self):
+        self.arduinoController.sendAntrieb("TRANSPORT")
+        while self.arduinoController.getAntrieb != "DONE":
+            self.gameState.arduinoBusy = True
+        self.gameState.arduinoBusy = False
+                                                        
     def clickUpdatePorts(self):
         # Update ports for serial communication
         if self.arduinoController.updatePorts() is False:
