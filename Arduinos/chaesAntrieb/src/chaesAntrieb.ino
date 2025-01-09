@@ -205,7 +205,7 @@ void checkForInput() {
     } else if (input == "DEMO"){
       mode = DEMO_MODE;
     } else if (input == "i") {//debug
-        Serial.println("cablelengthL: " + String(cableLength[0]) + "cablelengthR" + String(cableLength[1]) + "X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + " dirL: " + String(dirL) + " dirR: " + String(dirR));
+        Serial.println("cablelengthL: " + String(cableLength[0]) + "cablelengthR: " + String(cableLength[1]) + "X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + " dirL: " + String(dirL) + " dirR: " + String(dirR));
     }
 
     // Parse the input string
@@ -320,8 +320,8 @@ void getCoords() {
     posR = posVR;
   }
   // coordinates
-  cableLength[0] = posL * COORD_SCAL;
-  cableLength[1] = posR * COORD_SCAL;
+  cableLength[0] = posL / COORD_SCAL;
+  cableLength[1] = posR / COORD_SCAL;
   calculateCoords(BOARD_WIDTH + (2 * FEED_THROUGH_OFFSETX), cableLength[0], cableLength[1]);
 }
 
