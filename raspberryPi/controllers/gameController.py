@@ -223,7 +223,7 @@ class GameController(QObject):
             self.viewManager.showSuccess(SUCCESS_MESSAGES['HARDWARE_INITIALIZED'])
     
     def clickNullAntrieb(self):
-        self.arduinoController.sendAntrieb("null")
+        self.arduinoController.sendAntrieb("NULL")
         while self.arduinoController.getAntrieb != "DONE":
             self.gameState.arduinoBusy = True
         self.gameState.arduinoBusy = False
