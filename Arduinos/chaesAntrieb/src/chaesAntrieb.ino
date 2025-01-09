@@ -6,22 +6,22 @@
 #include <math.h>
 
 // Define the pins for the left motor
-#define ENR 4   // pmw pin (speed)
-#define IN3 23  // direction pin (forward)
-#define IN4 22  // direction pin (backward)
+#define ENL 4   // pmw pin (speed)
+#define IN1 23  // direction pin (forward)
+#define IN2 22  // direction pin (backward)
 #define C1R 18  // interupt (encoder)
 #define C2R 19  // interupt (encoder)
 
 // Define the pins for the right motor
-#define ENL 5   // pmw pin (speed)
-#define IN1 24  // direction pin (forward)
-#define IN2 25  // direction pin (backward)
+#define ENR 5   // pmw pin (speed)
+#define IN4 24  // direction pin (forward)
+#define IN3 25  // direction pin (backward)
 #define C1L 20  // interupt (encoder)
 #define C2L 21  // interupt (encoder)
 
 // Define the pins for the joysticks
-int joystickR = A1;
-int joystickL = A8;
+int joystickR = A8;
+int joystickL = A1;
 
 // Define the pins for the left and right limit switch
 #define limitSwitchL 3
@@ -36,10 +36,10 @@ int joystickL = A8;
 #define NUMPIXELS_RING 22
 
 // Constants
-const int MIN_JVALR = 355;  // min value for joysticks
-const int MIN_JVALL = 380;
-const int MAX_JVALR = 665;  //  max value for joysticks
-const int MAX_JVALL = 735;
+const int MIN_JVALL = 355;  // min value for joysticks
+const int MIN_JVALR = 380;
+const int MAX_JVALL = 665;  //  max value for joysticks
+const int MAX_JVALR = 735;
 
 const int BOARD_WIDTH = 495;
 const int FEED_THROUGH_OFFSETX = 19;
@@ -171,10 +171,13 @@ void setup() {
 }
 
 void loop() {
-  checkForInput();
+  moveRocket(-100,-100);
+  //Serial.println("posVL: " + String(posVL) + " posVR: " + String(posVR));
+  //checkForInput();
   getCoords();
+  //Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + "dirL: " + String(dirL) + " dirR: " + String(dirR));
   //blockCheck(50);
-  executemode();
+  //executemode();
 }
 
 void checkForInput() {
@@ -300,7 +303,7 @@ void playerMode(bool demo) {
   int latency = randomLatency ? random(0, MAX_LATENCY) : latency;
 
   //delay(latency);
-  moveRocket(-leftSpeed, rightSpeed);
+  moveRocket(leftSpeed, rightSpeed);
 }
 
 void sendCoords() {
@@ -444,11 +447,13 @@ void regulateSpeed(int delta, bool left) {
 
 void calculateCoords(int distance, int left, int right) {
   //Cathetics theorem and Euclid's altitude theorem
-  int p = left * left / distance;
-  int q = right * right / distance;
+  //Serial.println("distance " + String(distance) + " left " + String(left) + " right " + String(right));
+  float p = left * left / distance;
+  float q = right * right / distance;
   int h = sqrt(p*q);
   coords[0] = BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX - p;
   coords[1] = BOARD_HIGHT + FEED_THROUGH_OFFSETY - h;
+  Serial.println("p " + String(p) + " q " + String(q) + " h " + String(h));
 }
 
 void boxCoords(int leftBorder, int rightBorder, int lowerBorder,
@@ -627,14 +632,14 @@ void createWave() {
 
 void demoLED() {
   rainbow();
+  Serial.println("demp");
 }
 
 void rainbow() {
   for (long firstPixelHue = 0; firstPixelHue < 5 * 65536; firstPixelHue += 256) {
-    if (timerDemo.fire()) {
       boarderStrip.rainbow(firstPixelHue);
       ringStrip.show();
-      }
+      delay(20);
     }
   }
 
@@ -662,7 +667,6 @@ void ledInitialisation() {
   boarderStrip.show();
   ringStrip.show();
   initialisationCounter++;
-  mode = WAITING_MODE;
 }
 
 int PIDController(float delta) {
