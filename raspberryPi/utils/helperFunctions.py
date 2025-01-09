@@ -21,8 +21,8 @@ class HelperFunctions:
     def getCoordinates():
         # Get the directory of the current script
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # Create the full path to coordinates.json
-        json_path = os.path.join(current_dir, "coordinates.json")
+        # Create the full path to highscore_status.json
+        json_path = os.path.join(current_dir, "../config/coordinates.json")
         
         # Load the JSON file with the full path
         with open(json_path, "r") as file:
