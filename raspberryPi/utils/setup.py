@@ -6,7 +6,7 @@ import json
 #automatically install required packages commented out for now, it doesn't work
 #instead of <"updateSuccessful": updateSuccessful> its set to True for now
 def setup():
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    base_dir = os.path.dirname(os.path.dirname(__file__))
     config_dir = os.path.join(base_dir, 'config')
     
     internetConnection = check_internet_connection()
