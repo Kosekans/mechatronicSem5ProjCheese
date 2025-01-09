@@ -9,15 +9,15 @@
 #define ENL 4   // pmw pin (speed)
 #define IN1 23  // direction pin (forward)
 #define IN2 22  // direction pin (backward)
-#define C1R 18  // interupt (encoder)
-#define C2R 19  // interupt (encoder)
+#define C2R 18  // interupt (encoder)
+#define C1R 19  // interupt (encoder)
 
 // Define the pins for the right motor
 #define ENR 5   // pmw pin (speed)
 #define IN4 24  // direction pin (forward)
 #define IN3 25  // direction pin (backward)
-#define C1L 20  // interupt (encoder)
-#define C2L 21  // interupt (encoder)
+#define C2L 20  // interupt (encoder)
+#define C1L 21  // interupt (encoder)
 
 // Define the pins for the joysticks
 int joystickR = A8;
@@ -55,13 +55,14 @@ const int NULL_SPEED2 = 60;
 
 const int DEADZONE = 50;       // deadzone for the joysticks
 const int MAX_LATENCY = 1000;  // max latency in ms
+const int nullingCableLength = 810;  // length of the cable for the nulling
 
 //positions
 const int RADIUS_TO_START = 10;
 
 //volatile variables for the encoder
-volatile int posVL = 0;  // position of the left motor
-volatile int posVR = 0;  // position of the right motor
+volatile int posVL = (BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX * COORD_SCAL) - 22.5;  // position of the left motor
+volatile int posVR = (BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX * COORD_SCAL) - 22.5;  // position of the right motor
 
 // Flags for nulling the coordinates
 bool nullLeft = false;
@@ -171,13 +172,12 @@ void setup() {
 }
 
 void loop() {
-  moveRocket(-100,-100);
   //Serial.println("posVL: " + String(posVL) + " posVR: " + String(posVR));
-  //checkForInput();
+  checkForInput();
   getCoords();
   //Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + "dirL: " + String(dirL) + " dirR: " + String(dirR));
   //blockCheck(50);
-  //executemode();
+  executemode();
 }
 
 void checkForInput() {
@@ -350,42 +350,42 @@ void findCoordOrigin() {
 }
 
 void setMotorState(int in1, int in2, int en, int speed) {
-  digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in1, LOW);
   analogWrite(en, speed);
 }
 
 int approachOrigin(int speed, int phaseR) {
   if (!nullLeft) {
     setMotorState(IN1, IN2, ENL, speed);
-  } 
+  } else {
+    setMotorState(IN2, IN1, ENL, 0);
+  }
   if (!nullRight) {
     setMotorState(IN3, IN4, ENR, speed);
+  } else {
+    setMotorState(IN4, IN3, ENR, 0);
   }
 
   if (nullLeft && nullRight) {
-    double offsetY = FEED_THROUGH_OFFSETY + BOARD_HIGHT + COORD_NULL_OFFSETY;
-    double offsetX = (BOARD_WIDTH/2.0) + FEED_THROUGH_OFFSETX;
-    double distance = sqrt(pow(offsetY, 2) + pow(offsetX, 2));
-    int cableLength = round(distance * COORD_SCAL);
-    posVL = posVR = cableLength;
+    posVL = posVR = nullingCableLength;
     phaseR++;
   }
   return phaseR;
 }
 
 int distanceToOrigin(int speed, int phaseD) {
-  if (posVL <= 1000) {
+  if (posVL >= -50) {
     setMotorState(IN2, IN1, ENL, speed);
   } else {
     setMotorState(IN1, IN2, ENL, 0);
   }
-  if (posVR <= 1000) {
+  if (posVR >= -50) {
     setMotorState(IN4, IN3, ENR, speed);
   } else {
     setMotorState(IN3, IN4, ENR, 0);
   }
-  if (posVL > 1000 && posVR > 1000) {
+  if (posVL < 50 && posVR < 50) {
     stopMotors();
     nullLeft = nullRight = false;
     phaseD++;
@@ -452,6 +452,7 @@ void calculateCoords(int distance, int left, int right) {
   int y = sqrt(x * x - left * left);
   coords[0] = x + BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX;
   coords[1] = y - (BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15);
+  //Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]));
 }
 
 void boxCoords(int leftBorder, int rightBorder, int lowerBorder,
