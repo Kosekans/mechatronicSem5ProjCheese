@@ -109,7 +109,7 @@ class GameController(QObject):
                 self.viewManager.showWarning(SUCCESS_MESSAGES['STAR_CATCHED_UP'])
             self.viewManager.showSuccess(timeMessage)
 
-        self.checkHighScore()
+        self.HelperFunctions.checkHighScore(self.gameState.infinityCount, self.gameState.timePlayed)
         self.clickAbortGame()
         self.viewManager.navigateToPage('main')
     
@@ -117,9 +117,6 @@ class GameController(QObject):
         self.arduinoController.sendAntrieb("COORDS")
         currentCoords = self.arduinoController.getAntrieb()
         return HelperFunctions.coordsMatchCheck(currentCoords, self.gameState.goalCoords, tolerance)
-
-    def checkHighScore(self):
-        pass
     
     def clickAbortGame(self):
         self.gameState.reset

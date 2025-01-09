@@ -105,5 +105,24 @@ class HelperFunctions:
             
         return coords
 
-if __name__ == "__main__":
-    print(HelperFunctions.makeGoalCoordsLegal([1, 1]))
+    @staticmethod
+    def checkHighScore(infinityCount: int, timePlayed: int):
+        # Get the directory of the current script
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # Create the full path to highscore_status.json
+        json_path = os.path.join(current_dir, "../config/highscore_status.json")
+        
+        # Load the JSON file with the full path
+        with open(json_path, "r") as file:
+            highscore_status = json.load(file)
+
+        # Check and update the high score if necessary
+        if infinityCount > highscore_status.get("infinityCount", 0):
+            highscore_status["infinityCount"] = infinityCount
+        
+        if timePlayed > highscore_status.get("timePlayed", 0):
+            highscore_status["timePlayed"] = timePlayed
+        
+        # Save the updated high score back to the JSON file
+        with open(json_path, "w") as file:
+            json.dump(highscore_status, file, indent=4)
