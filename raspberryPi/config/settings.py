@@ -71,5 +71,7 @@ SUCCESS_MESSAGES = {
     'UPDATED': 'Repository updated successfully',
     'NULL_ANTRIEB': 'Nulling motors successfully',
     'GAME_WON': 'you won, congratulations',
-    'GAME_ENDED_WITH_TIME': 'congradulations, you lasted '
+    'GAME_ENDED_WITH_TIME': 'congradulations, you lasted ',
+    'GAME_ENDED_WITH_NUMBER_OF_GOALS1': 'congradulations, you landed on ',
+    'GAME_ENDED_WITH_NUMBER_OF_GOALS1': ' craters on the moon'
 }

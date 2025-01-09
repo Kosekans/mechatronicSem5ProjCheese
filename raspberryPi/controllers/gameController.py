@@ -55,7 +55,9 @@ class GameController(QObject):
             self.runGame()
 
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
-            pass#todo
+            self.gameState.goalCoords = HelperFunctions.createGoalCoords()
+            self.arduinoController.sendZiel(self.gameState.goalCoordsToString)
+            self.runGame()
 
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             self.arduinoController.sendAntrieb("COORDS")
@@ -78,7 +80,6 @@ class GameController(QObject):
     def gameOver(self, triggeredFromBallLost: bool):
         self.gameState.timePlayed = time.time() - self.startTime
         timeMessage = SUCCESS_MESSAGES['GAME_ENDED_WITH_TIME'] + str(self.gameState.timePlayed)
-        self.checkHighScore()
 
         if self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['follow']:
             if triggeredFromBallLost:
@@ -94,7 +95,12 @@ class GameController(QObject):
                 self.viewManager.showWarning(ERROR_MESSAGES['BALL_LOST'])
 
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
-            pass#todo
+            if self.compareCoordsIfEqual():
+                self.gameState.infinityCount += 1
+                self.setupGame()
+            else:
+                self.viewManager.showWarning(ERROR_MESSAGES['BALL_LOST'])
+                self.viewManager.showSuccess(SUCCESS_MESSAGES['GAME_ENDED_WITH_NUMBER_OF_GOALS1'] + str(self.gameState.infinityCount) + SUCCESS_MESSAGES['GAME_ENDED_WITH_NUMBER_OF_GOALS2'])
 
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['inverseFollow']:
             if triggeredFromBallLost:
@@ -103,6 +109,7 @@ class GameController(QObject):
                 self.viewManager.showWarning(SUCCESS_MESSAGES['STAR_CATCHED_UP'])
             self.viewManager.showSuccess(timeMessage)
 
+        self.checkHighScore()
         self.clickAbortGame()
         self.viewManager.navigateToPage('main')
     

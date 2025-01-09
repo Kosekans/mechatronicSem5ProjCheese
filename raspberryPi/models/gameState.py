@@ -28,6 +28,7 @@ class GameState:
         self.ballInRocket: bool = False
         self.arduinoBusy: bool = False
         self.timePlayed = 0
+        self.infinityCount = 0
         
     def reset(self):
         self.portsFound: bool = False
@@ -47,6 +48,7 @@ class GameState:
         self.ballInRocket: bool = False
         self.arduinoBusy: bool = False
         self.timePlayed = 0
+        self.infinityCount = 0
 
     def goalCoordsToString(self):
         return "{}/{}/{}".format(self.goalCoords[0], self.goalCoords[1], self.goalCoordsVelo)
