@@ -3,7 +3,8 @@ import sys
 import subprocess
 import socket
 import json
-
+#automatically install required packages commented out for now, it doesn't work
+#instead of <"updateSuccessful": updateSuccessful> its set to True for now
 def setup():
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     config_dir = os.path.join(base_dir, 'config')
@@ -12,16 +13,17 @@ def setup():
     updateSuccessful = False
     if internetConnection:
         updateSuccessful = update_repository()
+        '''
         if updateSuccessful:
             if not installSystemPackages():
                 return False
             if not installPythonPackages():
                 return False
-    
+        '''
     config_path = os.path.join(config_dir, 'setup_status.json')
     status = {
         "internetConnection": internetConnection,
-        "updateSuccessful": updateSuccessful
+        "updateSuccessful": True #updateSuccessful
     }
     with open(config_path, 'w') as config_file:
         json.dump(status, config_file)
