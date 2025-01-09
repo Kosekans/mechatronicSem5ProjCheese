@@ -12,7 +12,9 @@ Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/chaes/.Xauthority
 Environment=QT_QPA_PLATFORM=xcb
 Environment=QT_PLUGIN_PATH=/usr/lib/qt/plugins
-ExecStart=/usr/bin/python3 /home/chaes/mechatronicSem5ProjCheese/raspberryPi/main.py
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=PYTHONPATH=/home/chaes/mechatronicSem5ProjCheese/raspberryPi
+ExecStart=/usr/bin/env python3 /home/chaes/mechatronicSem5ProjCheese/raspberryPi/main.py
 Restart=on-failure
 RestartSec=5
 
