@@ -172,10 +172,8 @@ void setup() {
 }
 
 void loop() {
-  //Serial.println("posVL: " + String(posVL) + " posVR: " + String(posVR));
   checkForInput();
   getCoords();
-  Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + "dirL: " + String(dirL) + " dirR: " + String(dirR));
   blockCheck(50);
   executemode();
 }
@@ -205,6 +203,8 @@ void checkForInput() {
       mode = PLAYER_MODE;
     } else if (input == "DEMO"){
       mode = DEMO_MODE;
+    } else if (input == "i") {//debug
+        Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + "dirL: " + String(dirL) + " dirR: " + String(dirR));
     }
 
     // Parse the input string
@@ -379,7 +379,7 @@ int approachOrigin(int speed, int phaseR) {
 }
 
 int distanceToOrigin(int speed, int phaseD) {
-  Serial.println("L: " + String(posVL) + " R: " + String(posVR));
+  delay(10); // wait for the encoder to update BAXUSMAXUS WITHOUT
   if (posVL >= nullingCableLength-1000) {
     setMotorState(IN2, IN1, ENL, speed);
   } else {
@@ -457,7 +457,6 @@ void calculateCoords(int distance, int left, int right) {
   int y = round(sqrt(x * x - left * left));
   coords[0] = x - (round(BOARD_WIDTH / 2) + FEED_THROUGH_OFFSETX);
   coords[1] = y + BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15;
-  //Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]));
 }
 
 void boxCoords(int leftBorder, int rightBorder, int lowerBorder,
