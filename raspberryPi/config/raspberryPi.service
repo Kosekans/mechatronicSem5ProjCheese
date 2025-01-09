@@ -1,6 +1,3 @@
-[Unit]
-After=network.target
-
 [Service]
 ExecStart=/home/chaes/mechatronicSem5ProjCheese/raspberryPi/main.py
 
