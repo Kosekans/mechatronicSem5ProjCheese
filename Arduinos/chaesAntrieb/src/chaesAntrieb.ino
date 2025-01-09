@@ -402,30 +402,11 @@ int distanceToOrigin(int speed, int phaseD) {
 }
 
 void moveToEjectPos() {
-  bool left = true;
-  double x = FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2.0);
-  double y = FEED_THROUGH_OFFSETY + BOARD_HIGHT - EJECT_NULL_OFFSETX;
-  int goalDistance = (int)(pow(x, 2) + pow(y, 2));
-  int deltaLeft = posVL - goalDistance;
-  int deltaRight = posVR - goalDistance;
-  regulateSpeed(deltaLeft, left);
-  regulateSpeed(deltaRight, !left);
   Serial.println("DONE");
   mode = WAITING_MODE;
 }
 
 void moveToStartPos() {
-  bool left = true;
-  double x = FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2.0);
-  double y = FEED_THROUGH_OFFSETY + BOARD_HIGHT;
-  int goalDistance = (int)(pow(x, 2) + pow(y, 2));
-  int deltaLeft = posVL - goalDistance;
-  int deltaRight = posVR - goalDistance;
-  if (posVL < RADIUS_TO_START) {
-    setMotorState(IN2, IN1, ENL, MAX_SPEED);
-  }
-  regulateSpeed(deltaLeft, left);
-  regulateSpeed(deltaRight, !left);
   Serial.println("DONE");
   mode = WAITING_MODE;
 }
@@ -457,9 +438,9 @@ void calculateCoords(int distance, int left, int right) {
   //x,y nullpunkt oben links
   distance -= 55;
   int x = round((left * left - right * right + distance * distance) / (2 * distance));
-  int y = round(sqrt(x * x - left * left));
+  int y = round(sqrt(left * left - x * x));
   coords[0] = x - (round(BOARD_WIDTH / 2) + FEED_THROUGH_OFFSETX);
-  coords[1] = y + BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15;
+  coords[1] = -y + BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15;
 }
 
 void boxCoords(int leftBorder, int rightBorder, int lowerBorder,
