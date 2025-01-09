@@ -51,7 +51,7 @@ const int EJECT_NULL_OFFSETX = 150; //needs finetuning
 
 const long MAX_SPEED = 255;   // Maximum speed for the motors
 const int NULL_SPEED1 = 100;  // nulling speeds
-const int NULL_SPEED2 = 60;
+const int NULL_SPEED2 = 80;
 
 const int DEADZONE = 50;       // deadzone for the joysticks
 const int MAX_LATENCY = 1000;  // max latency in ms
@@ -105,7 +105,7 @@ enum Modes {
   WAITING_MODE
 };
 // defaulft mode
-Modes mode = PLAYER_MODE;
+Modes mode = INITIALIZATION_MODE;  //INITIALIZATION_MODE to null the coordinates
 
 // PID Settings
 float error, integral, derivative, previousError;
@@ -175,8 +175,8 @@ void loop() {
   //Serial.println("posVL: " + String(posVL) + " posVR: " + String(posVR));
   checkForInput();
   getCoords();
-  //Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + "dirL: " + String(dirL) + " dirR: " + String(dirR));
-  //blockCheck(50);
+  Serial.println("X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + "dirL: " + String(dirL) + " dirR: " + String(dirR));
+  blockCheck(50);
   executemode();
 }
 
@@ -263,6 +263,7 @@ void executemode() {
     case WAITING_MODE:
       on = false;
       initialisationCounter = 0;
+      phase = 0;
       stopMotors();
       allGreen();
       break;
@@ -341,7 +342,10 @@ void findCoordOrigin() {
       phase = approachOrigin(NULL_SPEED2, phase);
       break;
     case 3:
-      phase = distanceToOrigin(MAX_SPEED, phase);
+      setMotorState(IN2, IN1, ENL, 200);
+      setMotorState(IN4, IN3, ENR, 200);
+      delay(2000);
+      stopMotors();
     case 4:
       Serial.println("DONE");
       mode = WAITING_MODE;
@@ -375,17 +379,18 @@ int approachOrigin(int speed, int phaseR) {
 }
 
 int distanceToOrigin(int speed, int phaseD) {
-  if (posVL >= -50) {
+  Serial.println("L: " + String(posVL) + " R: " + String(posVR));
+  if (posVL >= nullingCableLength-1000) {
     setMotorState(IN2, IN1, ENL, speed);
   } else {
     setMotorState(IN1, IN2, ENL, 0);
   }
-  if (posVR >= -50) {
+  if (posVR >= nullingCableLength-1000) {
     setMotorState(IN4, IN3, ENR, speed);
   } else {
     setMotorState(IN3, IN4, ENR, 0);
   }
-  if (posVL < 50 && posVR < 50) {
+  if (posVL < nullingCableLength-1000 && nullingCableLength-1000 > posVR) {
     stopMotors();
     nullLeft = nullRight = false;
     phaseD++;
