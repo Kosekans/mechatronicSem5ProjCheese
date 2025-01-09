@@ -451,7 +451,7 @@ void calculateCoords(int distance, int left, int right) {
   int x = round((left * left - right * right + distance * distance) / (2 * distance));
   int y = sqrt(x * x - left * left);
   coords[0] = x + BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX;
-coords[1] = y - (BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15);
+  coords[1] = y - (BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15);
 }
 
 void boxCoords(int leftBorder, int rightBorder, int lowerBorder,
