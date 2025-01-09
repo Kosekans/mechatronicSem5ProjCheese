@@ -1,23 +1,8 @@
 [Unit]
-Description=Raspberry Pi Cheese Project
 After=network.target
-Wants=network-online.target
 
 [Service]
-Type=simple
-User=chaes
-Group=chaes
-WorkingDirectory=/home/chaes/mechatronicSem5ProjCheese/raspberryPi
-Environment=PYTHONPATH=/home/chaes/mechatronicSem5ProjCheese/raspberryPi
-Environment=PYTHONUNBUFFERED=1
-
-ExecStartPre=/bin/chmod +x /home/chaes/mechatronicSem5ProjCheese/raspberryPi/utils/setup.py
-ExecStartPre=/bin/chmod +x /home/chaes/mechatronicSem5ProjCheese/raspberryPi/main.py
-ExecStartPre=/usr/bin/python3 /home/chaes/mechatronicSem5ProjCheese/raspberryPi/utils/setup.py
-ExecStart=/usr/bin/python3 /home/chaes/mechatronicSem5ProjCheese/raspberryPi/main.py
-
-Restart=on-failure
-RestartSec=5
+ExecStart=/home/chaes/mechatronicSem5ProjCheese/raspberryPi/main.py
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
