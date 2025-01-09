@@ -1,11 +1,12 @@
 import os
 import sys
 from pathlib import Path
+import json
 
 # Add parent directory to system path to enable imports from parent modules
 current_dir = Path(__file__).parent
 parent_dir = str(current_dir.parent)
-if parent_dir not in sys.path:
+if (parent_dir not in sys.path):
     sys.path.append(parent_dir)
 
 from typing import List
@@ -51,7 +52,6 @@ class ViewManager(QObject):
         self.setupPages()
         self.setupUI()
         self.initErrorMessages()
-        self.navigateToPage('popUpHighscore')
 
     def initErrorMessages(self):
         if not self.internetConnection:
@@ -80,7 +80,6 @@ class ViewManager(QObject):
             'credits': 'credits.qml',
             'setGameMode': 'gameModeSettings.qml',
             'gameModeInfo': 'gameModeInfo.qml',
-            'popUpHighscore': 'popUpHighscore.qml',
             'runningGame': 'runningGame.qml'
         }
         self.pages = set(self.page_files.keys())
@@ -99,6 +98,8 @@ class ViewManager(QObject):
         self.engine.rootContext().setContextProperty("windowTitle", QML_SETTINGS['TITLE'])
         self.engine.rootContext().setContextProperty("warningMessage", self.warningMessage)
         self.engine.rootContext().setContextProperty("successMessage", self.successMessage)
+        self.engine.rootContext().setContextProperty("infinityCount", self.getInfinityCount())
+        self.engine.rootContext().setContextProperty("timePlayed", self.getTimePlayed())
         
         current_dir = os.path.dirname(os.path.abspath(__file__))
         qml_path = os.path.join(current_dir, 'qml', 'mainWindow.qml')
@@ -117,6 +118,11 @@ class ViewManager(QObject):
         if not self.engine.rootObjects():
             raise RuntimeError("Failed to load QML")
     
+    def updateHighscoreValues(self) -> None:
+        """Update the highscore values in QML context"""
+        self.engine.rootContext().setContextProperty("infinityCount", self.getInfinityCount())
+        self.engine.rootContext().setContextProperty("timePlayed", self.getTimePlayed())
+
     def navigateToPage(self, page_name: str) -> None:
         """
         Navigate to a specified page by name.
@@ -126,8 +132,11 @@ class ViewManager(QObject):
         if page_name in self.pages:
             self.page_stack.append(page_name)
             self.pageChanged.emit(page_name)
+            # Update values when navigating to highscore page
+            if page_name == 'highscore':
+                self.updateHighscoreValues()
             # Directly load game state when navigating to gameModeSettings
-            if page_name == 'setGameMode':
+            elif page_name == 'setGameMode':
                 self.loadGameModeSettingInfo()
 
     def goBack(self) -> None:
@@ -250,3 +259,27 @@ class ViewManager(QObject):
             message (str): Success message to display
         """
         self.successMessage.emit(message)
+
+    @pyqtSlot(result=int)
+    def getInfinityCount(self) -> int:
+        try:
+            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            config_path = os.path.join(current_dir, 'config', 'highscore_status.json')
+            with open(config_path, 'r') as f:
+                data = json.load(f)
+                return data.get('infinityCount', 0)
+        except Exception as e:
+            print(f"Error reading infinity count: {e}")
+            return 0
+
+    @pyqtSlot(result=int)
+    def getTimePlayed(self) -> int:
+        try:
+            current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            config_path = os.path.join(current_dir, 'config', 'highscore_status.json')
+            with open(config_path, 'r') as f:
+                data = json.load(f)
+                return data.get('timePlayed', 0)
+        except Exception as e:
+            print(f"Error reading time played: {e}")
+            return 0

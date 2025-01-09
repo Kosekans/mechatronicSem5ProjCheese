@@ -12,6 +12,27 @@ Item {
         columns: 1
         rowSpacing: 20
 
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: "Highscores"
+            font.pixelSize: 48
+            color: "white"
+        }
+
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: "Infinity Mode Count: " + infinityCount
+            font.pixelSize: 32
+            color: "white"
+        }
+
+        Text {
+            Layout.alignment: Qt.AlignHCenter
+            text: "Time Played (minutes): " + timePlayed
+            font.pixelSize: 32
+            color: "white"
+        }
+
         Item {
             Layout.fillHeight: true
             Layout.fillWidth: true
