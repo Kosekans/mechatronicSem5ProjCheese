@@ -326,7 +326,7 @@ void getCoords() {
 }
 
 void blockCheck(int saveZone) {
-  //blockLeftPos = blockRightPos = ( + saveZone) < BOARD_WIDTH;
+  blockLeftPos = blockRightPos = (cableLength[0] + cableLength[1] + saveZone) < BOARD_WIDTH;
   blockLeftPos = coords[0] < BOARD_HIGHT - saveZone;
   blockRightPos = coords[1] < BOARD_HIGHT - saveZone;
   blockLeftNeg = coords[0] > 0;
