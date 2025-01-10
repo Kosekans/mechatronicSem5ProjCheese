@@ -89,13 +89,13 @@ class GameController(QObject):
             self.viewManager.showSuccess(timeMessage)
 
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['goal']:
-            if self.compareCoordsIfEqual():
+            if self.compareCoordsIfEqual(50):
                 self.viewManager.showSuccess(SUCCESS_MESSAGES['GAME_WON'])
             else:
                 self.viewManager.showWarning(ERROR_MESSAGES['BALL_LOST'])
 
         elif self.gameState.gameMode == GAME_SETTINGS['GAME_MODES']['infinity']:
-            if self.compareCoordsIfEqual():
+            if self.compareCoordsIfEqual(50):
                 self.gameState.infinityCount += 1
                 self.setupGame()
             else:
