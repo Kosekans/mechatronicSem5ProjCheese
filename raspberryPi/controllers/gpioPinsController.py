@@ -56,9 +56,9 @@ class GpioPinsController(QObject):
             
         try:
             GPIO.setmode(GPIO.BCM)
-            GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.setup(self.START_BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
             GPIO.setup(self.BALL_EJECT_PIN, GPIO.OUT)
-            GPIO.setup(self.BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            GPIO.setup(self.BALL_FALLING_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
             GPIO.setup(self.START_BUTTON_LED_PIN, GPIO.OUT)
 
             # Add event detection for START_BUTTON_PIN

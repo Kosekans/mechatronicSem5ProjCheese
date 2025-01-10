@@ -6,22 +6,22 @@
 #include <math.h>
 
 // Define the pins for the left motor
-#define ENR 4   // pmw pin (speed)
-#define IN3 24  // direction pin (forward)
-#define IN4 25  // direction pin (backward)
-#define C1R 18  // interupt (encoder)
-#define C2R 19  // interupt (encoder)
+#define ENL 4   // pmw pin (speed)
+#define IN1 23  // direction pin (forward)
+#define IN2 22  // direction pin (backward)
+#define C2R 18  // interupt (encoder)
+#define C1R 19  // interupt (encoder)
 
 // Define the pins for the right motor
-#define ENL 5   // pmw pin (speed)
-#define IN1 22  // direction pin (forward)
-#define IN2 23  // direction pin (backward)
-#define C1L 20  // interupt (encoder)
-#define C2L 21  // interupt (encoder)
+#define ENR 5   // pmw pin (speed)
+#define IN4 24  // direction pin (forward)
+#define IN3 25  // direction pin (backward)
+#define C2L 20  // interupt (encoder)
+#define C1L 21  // interupt (encoder)
 
 // Define the pins for the joysticks
-#define joystickL A0
-#define joystickR A1
+int joystickR = A8;
+int joystickL = A1;
 
 // Define the pins for the left and right limit switch
 #define limitSwitchL 3
@@ -36,38 +36,33 @@
 #define NUMPIXELS_RING 22
 
 // Constants
-const long MIN_JVALR = 370;  // min value for joysticks
-const long MIN_JVALL = 355;
-const long MAX_JVALR = 725;  //  max value for joysticks
-const long MAX_JVALL = 650;
+const int MIN_JVALL = 355;  // min value for joysticks
+const int MIN_JVALR = 380;
+const int MAX_JVALL = 665;  //  max value for joysticks
+const int MAX_JVALR = 735;
 
-const int BOARD_WIDTH = 533;
-const int FEED_THROUGH_OFFSETX = 100;
-const int FEED_THROUGH_OFFSETY = 100;
-const int BOARD_HIGHT = 770;
-const int WIRE_LENGHT = 1000;
-const int COORD_SCAL = 1;  // mm = steps / SCAL
-const int LIMIT_SWITCH_HIGHT = 770;
-const int COORD_NULL_OFFSETY = 150; //needs finetuning
+const int BOARD_WIDTH = 495;
+const int FEED_THROUGH_OFFSETX = 19;
+const int FEED_THROUGH_OFFSETY = 19;
+const int BOARD_HIGHT = 591;
+const int COORD_SCAL = 249;  // mm = steps / SCAL
+const int COORD_NULL_OFFSETY = 102; //needs finetuning
+const int EJECT_NULL_OFFSETX = 150; //needs finetuning
 
 const long MAX_SPEED = 255;   // Maximum speed for the motors
 const int NULL_SPEED1 = 100;  // nulling speeds
-const int NULL_SPEED2 = 60;
+const int NULL_SPEED2 = 80;
 
 const int DEADZONE = 50;       // deadzone for the joysticks
 const int MAX_LATENCY = 1000;  // max latency in ms
+const int nullingCableLength = 810;  // length of the cable for the nulling
 
 //positions
-const int EJECT_POS[2] = { 0, -10 };
-const int NULLING_POS[2] = { 0, -50 };
 const int RADIUS_TO_START = 10;
 
-// volatile keyword prevents the compiler from performing optimizations on the
-// variable that could potentially lead to it being misread. In addition to the
-// volatile directive, an ATOMIC_BLOCK macro is needed to access the position
-// variable.
-volatile int posVL = 0;  // position of the left motor
-volatile int posVR = 0;  // position of the right motor
+//volatile variables for the encoder
+volatile int posVL = (BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX * COORD_SCAL) - 22.5;  // position of the left motor
+volatile int posVR = (BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX * COORD_SCAL) - 22.5;  // position of the right motor
 
 // Flags for nulling the coordinates
 bool nullLeft = false;
@@ -92,9 +87,12 @@ bool randomInverseSticks = false;
 bool randomRocketVelocity = false;
 bool randomLatency = false;
 bool gameActive = true;
+bool firstRun = true;
+
 
 // coordinates of the rocket
 int coords[2];
+int cableLength[2];
 
 // enum for the different modes
 enum Modes {
@@ -108,7 +106,7 @@ enum Modes {
   WAITING_MODE
 };
 // defaulft mode
-Modes mode = PLAYER_MODE;
+Modes mode = INITIALIZATION_MODE;  //INITIALIZATION_MODE to null the coordinates
 
 // PID Settings
 float error, integral, derivative, previousError;
@@ -154,8 +152,9 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(limitSwitchL), readLimitSwitchL, FALLING);
   attachInterrupt(digitalPinToInterrupt(limitSwitchR), readLimitSwitchR, FALLING);
   
-  //pinMode(joystickL, INPUT);
-  //pinMode(joystickR, INPUT);
+  // joysticks
+  pinMode(joystickL, INPUT);
+  pinMode(joystickR, INPUT);
 
   // Setting up the NeoPixel
   boarderStrip.begin();
@@ -167,7 +166,7 @@ void setup() {
   allGreen();
 
   waveTimer.begin(2000);
-  timerDemo.begin(500);
+  timerDemo.begin(20);
 
   Serial.begin(9600);
   Serial.setTimeout(10);
@@ -176,7 +175,7 @@ void setup() {
 void loop() {
   checkForInput();
   getCoords();
-  //blockCheck();
+  blockCheck(50);
   executemode();
 }
 
@@ -205,6 +204,8 @@ void checkForInput() {
       mode = PLAYER_MODE;
     } else if (input == "DEMO"){
       mode = DEMO_MODE;
+    } else if (input == "i") {//debug
+        Serial.println("cablelengthL: " + String(cableLength[0]) + "cablelengthR: " + String(cableLength[1]) + "X: " + String(coords[0]) + " Y: " + String(coords[1]) + " blockLeftPos: " + String(blockLeftPos) + " blockRightPos: " + String(blockRightPos) + " blockLeftNeg: " + String(blockLeftNeg) + " blockRightNeg: " + String(blockRightNeg) + " dirL: " + String(dirL) + " dirR: " + String(dirR));
     }
 
     // Parse the input string
@@ -232,6 +233,7 @@ void executemode() {
     case INITIALIZATION_MODE:
       findCoordOrigin();
       ledInitialisation();
+      firstRun = true;
       break;
     case TRANSPORT_MODE:
       transportMode();
@@ -239,12 +241,17 @@ void executemode() {
     case PLAYER_MODE:
       playerMode(false);
       playLED();
+      firstRun = true;
       break;
     case ORIGIN_MODE:
       moveToStartPos();
+      ledInitialisation();
+      firstRun = true;
       break;
     case EJECT_MODE:
       moveToEjectPos();
+      ledInitialisation();
+      firstRun = true;
       break;
     case ERROR_MODE:
       if (!on){
@@ -252,13 +259,19 @@ void executemode() {
       }
       stopMotors();
       ledError();
+      firstRun = true;
       break;
     case WAITING_MODE:
       on = false;
+      initialisationCounter = 0;
+      phase = 0;
       stopMotors();
+      allGreen();
       break;
     case DEMO_MODE:
-      playerMode(true);;
+      playerMode(true);
+      demoLED();
+      firstRun = true;
       break;
   }
 }
@@ -281,7 +294,7 @@ void playerMode(bool demo) {
       joystickRValue = random(MIN_JVALR, MAX_JVALR);
     }
     */
-    delay(500);
+    //delay(500);
     joystickLValue = random(MIN_JVALL, MAX_JVALL);
     joystickRValue = random(MIN_JVALR, MAX_JVALR);
   }
@@ -296,6 +309,7 @@ void playerMode(bool demo) {
 }
 
 void sendCoords() {
+  boxCoords(BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
   Serial.println(String(coords[0]) + "/" + String(coords[1]));
 }
 
@@ -306,14 +320,15 @@ void getCoords() {
     posR = posVR;
   }
   // coordinates
-  calculateCoords(BOARD_WIDTH + (2 * FEED_THROUGH_OFFSETX), posL / COORD_SCAL, posR / COORD_SCAL);
-  boxCoords(BOARD_WIDTH / 2, -BOARD_WIDTH / 2, 0, BOARD_HIGHT);
+  cableLength[0] = posL / COORD_SCAL;
+  cableLength[1] = posR / COORD_SCAL;
+  calculateCoords(BOARD_WIDTH + (2 * FEED_THROUGH_OFFSETX), cableLength[0], cableLength[1]);
 }
 
-void blockCheck() {
-  blockLeftPos = blockRightPos = (coords[0] + coords[1]) < BOARD_WIDTH;
-  blockLeftPos = coords[0] < BOARD_HIGHT;
-  blockRightPos = coords[1] < BOARD_HIGHT;
+void blockCheck(int saveZone) {
+  blockLeftPos = blockRightPos = (cableLength[0] + cableLength[1] + saveZone) < BOARD_WIDTH;
+  blockLeftPos = coords[0] < BOARD_HIGHT - saveZone;
+  blockRightPos = coords[1] < BOARD_HIGHT - saveZone;
   blockLeftNeg = coords[0] > 0;
   blockRightNeg = coords[1] > 0;
 }
@@ -330,7 +345,10 @@ void findCoordOrigin() {
       phase = approachOrigin(NULL_SPEED2, phase);
       break;
     case 3:
-      phase = distanceToOrigin(MAX_SPEED, phase);
+      setMotorState(IN2, IN1, ENL, 200);
+      setMotorState(IN4, IN3, ENR, 200);
+      delay(2000);
+      stopMotors();
     case 4:
       Serial.println("DONE");
       mode = WAITING_MODE;
@@ -339,38 +357,43 @@ void findCoordOrigin() {
 }
 
 void setMotorState(int in1, int in2, int en, int speed) {
-  digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW);
+  digitalWrite(in2, HIGH);
+  digitalWrite(in1, LOW);
   analogWrite(en, speed);
 }
 
 int approachOrigin(int speed, int phaseR) {
   if (!nullLeft) {
     setMotorState(IN1, IN2, ENL, speed);
+  } else {
+    setMotorState(IN2, IN1, ENL, 0);
   }
   if (!nullRight) {
     setMotorState(IN3, IN4, ENR, speed);
+  } else {
+    setMotorState(IN4, IN3, ENR, 0);
   }
+
   if (nullLeft && nullRight) {
-    double offsetY = FEED_THROUGH_OFFSETY + BOARD_HIGHT + COORD_NULL_OFFSETY;
-    double offsetX = (BOARD_WIDTH/2.0) + FEED_THROUGH_OFFSETX;
-    double distance = sqrt(pow(offsetY, 2) + pow(offsetX, 2));
-    int cableLength = round(distance * COORD_SCAL);
-    posVL = posVR = cableLength;
+    posVL = posVR = nullingCableLength;
     phaseR++;
   }
   return phaseR;
 }
 
 int distanceToOrigin(int speed, int phaseD) {
-  if (posVL <= 100) {
+  delay(10); // wait for the encoder to update BAXUSMAXUS WITHOUT
+  if (posVL >= nullingCableLength-1000) {
     setMotorState(IN2, IN1, ENL, speed);
+  } else {
+    setMotorState(IN1, IN2, ENL, 0);
   }
-  if (posVR <= 100) {
+  if (posVR >= nullingCableLength-1000) {
     setMotorState(IN4, IN3, ENR, speed);
+  } else {
+    setMotorState(IN3, IN4, ENR, 0);
   }
-
-  if (posVL > 100 && posVR > 100) {
+  if (posVL < nullingCableLength-1000 && nullingCableLength-1000 > posVR) {
     stopMotors();
     nullLeft = nullRight = false;
     phaseD++;
@@ -379,30 +402,11 @@ int distanceToOrigin(int speed, int phaseD) {
 }
 
 void moveToEjectPos() {
-  bool left = true;
-  double x = FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2.0) + EJECT_POS[0];
-  double y = FEED_THROUGH_OFFSETY + BOARD_HIGHT - EJECT_POS[1];
-  int goalDistance = (int)(pow(x, 2) + pow(y, 2));
-  int deltaLeft = posVL - goalDistance;
-  int deltaRight = posVR - goalDistance;
-  regulateSpeed(deltaLeft, left);
-  regulateSpeed(deltaRight, !left);
   Serial.println("DONE");
   mode = WAITING_MODE;
 }
 
 void moveToStartPos() {
-  bool left = true;
-  double x = FEED_THROUGH_OFFSETX + (BOARD_WIDTH / 2.0);
-  double y = FEED_THROUGH_OFFSETY + BOARD_HIGHT;
-  int goalDistance = (int)(pow(x, 2) + pow(y, 2));
-  int deltaLeft = posVL - goalDistance;
-  int deltaRight = posVR - goalDistance;
-  if (posVL < RADIUS_TO_START) {
-    setMotorState(IN2, IN1, ENL, MAX_SPEED);
-  }
-  regulateSpeed(deltaLeft, left);
-  regulateSpeed(deltaRight, !left);
   Serial.println("DONE");
   mode = WAITING_MODE;
 }
@@ -431,12 +435,12 @@ void regulateSpeed(int delta, bool left) {
 }
 
 void calculateCoords(int distance, int left, int right) {
-  //Kathetensatz und Höhensatz von Euklid
-  int p = left * left / distance;
-  int q = right * right / distance;
-  int h = sqrt(p*q);
-  coords[0] = BOARD_WIDTH / 2 + FEED_THROUGH_OFFSETX - p;
-  coords[1] = BOARD_HIGHT + FEED_THROUGH_OFFSETY - h;
+  //x,y nullpunkt oben links
+  distance -= 55;
+  int x = round((left * left - right * right + distance * distance) / (2 * distance));
+  int y = round(sqrt(left * left - x * x));
+  coords[0] = x - (round(BOARD_WIDTH / 2) + FEED_THROUGH_OFFSETX);
+  coords[1] = -y + BOARD_HIGHT + FEED_THROUGH_OFFSETY + 15;
 }
 
 void boxCoords(int leftBorder, int rightBorder, int lowerBorder,
@@ -495,7 +499,7 @@ void moveRocket(int leftSpeed, int rightSpeed) {
 
 void transportMode() {
   while (!blockLeftPos && !blockRightPos) {
-    //moveRocket(MAX_SPEED, MAX_SPEED);
+    moveRocket(MAX_SPEED, MAX_SPEED);
   }
   Serial.println("DONE");
   mode = WAITING_MODE;
@@ -547,14 +551,17 @@ float mapFloat(long x, long in_min, long in_max, long out_min, long out_max) {
 }
 
 void allGreen() {
-  for (int i = 0; i < NUMPIXELS_BOARDER; i++) {
-    boarderStrip.setPixelColor(i, boarderStrip.Color(0, 255, 0));
+  if (firstRun) {
+    for (int i = 0; i < NUMPIXELS_BOARDER; i++) {
+      boarderStrip.setPixelColor(i, boarderStrip.Color(0, 255, 0));
+    }
+    for (int i = 0; i < NUMPIXELS_RING; i++) {
+      ringStrip.setPixelColor(i, ringStrip.Color(0, 255, 0));
+    }
+    ringStrip.show();
+    boarderStrip.show();
+    firstRun = false;
   }
-  for (int i = 0; i < NUMPIXELS_RING; i++) {
-    ringStrip.setPixelColor(i, ringStrip.Color(0, 255, 0));
-  }
-  ringStrip.show();
-  boarderStrip.show();
 }
 
 void ledError() {
@@ -610,8 +617,20 @@ void createWave() {
   waveCounter++;
 }
 
+void demoLED() {
+  rainbow();
+  Serial.println("demp");
+}
+
+void rainbow() {
+  for (long firstPixelHue = 0; firstPixelHue < 5 * 65536; firstPixelHue += 256) {
+      boarderStrip.rainbow(firstPixelHue);
+      ringStrip.show();
+      delay(20);
+    }
+  }
+
 void ledInitialisation() {
-  on = false;
   const uint32_t colors[7][3] = {
     { 255, 0, 0 }, { 0, 255, 0 }, { 0, 0, 255 }, { 255, 255, 0 }, { 255, 0, 255 }, { 0, 255, 255 }, { 255, 255, 255 }
   };
@@ -632,10 +651,9 @@ void ledInitialisation() {
     initialisationCounter = 0;
     colorCounter = (colorCounter + 1) % 7;
   }
-  boarderStrip.show();  // Update strip with new contents
-  ringStrip.show();     // Update strip with new contents
+  boarderStrip.show();
+  ringStrip.show();
   initialisationCounter++;
-  mode = WAITING_MODE;
 }
 
 int PIDController(float delta) {
@@ -647,7 +665,7 @@ int PIDController(float delta) {
   integral += error;
   derivative = error - previousError;
   int speed = Kp * error + Ki * integral + Kd * derivative;
-  speed = constrain(abs(speed), 0, maxSpeed);  // Begrenze die Geschwindigkeit auf maxSpeed
+  speed = constrain(abs(speed), 0, maxSpeed);
   previousError = error;
   return speed;
 }
